@@ -156,6 +156,16 @@ static int dap_init_all(void)
 	return ERROR_OK;
 }
 
+/* ADI version of the last DAP created, 0 if none (Qualcomm EUD uses it to
+ * pick its ADIv5 or ADIv6 connect and reset sequences). */
+unsigned int dap_get_last_adi_version(void)
+{
+	if (list_empty(&all_dap))
+		return 0;
+	struct arm_dap_object *obj = list_last_entry(&all_dap, struct arm_dap_object, lh);
+	return obj->dap.adi_version;
+}
+
 int dap_cleanup_all(void)
 {
 	struct arm_dap_object *obj, *tmp;

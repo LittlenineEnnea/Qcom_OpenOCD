@@ -88,6 +88,17 @@
 									 EUD_SWD_BB_GPIO_TRST_N | \
 									 EUD_SWD_BB_DAP_TRST_N)
 
+/*
+ * Bit-bang word layout (quic/eud send_data_via_bitbang): SWCLK, SWDIO,
+ * RCTLR_SRST_N, GPIO_DI_OE, GPIO_SRST_N, GPIO_TRST_N, DAP_TRST_N. Each word
+ * is answered with 4 bytes on FLUSH. The EUD buffers 32 bytes, so a packet
+ * holds at most 6 words (30 bytes) plus the FLUSH opcode.
+ */
+#define EUD_SWD_BB_SWCLK			BIT(0)
+#define EUD_SWD_BB_SWDIO			BIT(1)
+#define EUD_SWD_BB_IDLE				0x7c
+#define EUD_SWD_BB_WORDS_PER_PACKET	6
+
 #define EUD_SWD_CMD_FLUSH			1
 #define EUD_SWD_CMD_FREQ			2
 #define EUD_SWD_CMD_DELAY			3
@@ -428,6 +439,107 @@ static int eud_swd_prepare(void)
 	return eud_swd_init_defaults();
 }
 
+/*
+ * Bit-bang stream, as quic/eud SWDBitBangPack() sends it: one SWCLK high and
+ * one low word per bit, 6 words (30 bytes) per USB packet and no FLUSH until
+ * the very end, since a FLUSH in the middle of the selection alert breaks the
+ * ADIv6 wake-up. The EUD answers every word with 4 bytes; take them as they
+ * arrive (Qualcomm reads 32 bytes with a 100 ms timeout after each packet)
+ * and drain the rest after the final FLUSH.
+ */
+#define EUD_BB_READ_TIMEOUT_MS		100
+
+struct eud_bb_stream {
+	uint8_t out[EUD_SWD_BB_WORDS_PER_PACKET * 5 + 1];
+	unsigned int words;
+	unsigned int pending;
+};
+
+static int eud_bb_collect(struct eud_bb_stream *bb, bool all)
+{
+	uint8_t in[EUD_SWD_BUFFER_SIZE];
+
+	while (bb->pending >= sizeof(in) || (all && bb->pending)) {
+		int transferred = 0;
+		int ret = libusb_bulk_transfer(eud_swd.handle, EUD_EP_IN, in, sizeof(in),
+				&transferred, EUD_BB_READ_TIMEOUT_MS);
+		if (ret == LIBUSB_ERROR_TIMEOUT && !transferred)
+			return all ? ERROR_FAIL : ERROR_OK;
+		if (ret != LIBUSB_SUCCESS && ret != LIBUSB_ERROR_TIMEOUT) {
+			LOG_ERROR("EUD bit-bang read failed: %s", libusb_error_name(ret));
+			return jtag_libusb_error(ret);
+		}
+		bb->pending -= MIN((unsigned int)transferred, bb->pending);
+	}
+	return ERROR_OK;
+}
+
+static int eud_bb_send(struct eud_bb_stream *bb, bool flush)
+{
+	unsigned int len = bb->words * 5;
+	if (flush)
+		bb->out[len++] = EUD_SWD_CMD_FLUSH;
+	if (!len)
+		return ERROR_OK;
+
+	int retval = eud_bulk_write(&eud_swd, bb->out, len);
+	if (retval != ERROR_OK)
+		return retval;
+	bb->pending += bb->words * EUD_SWD_STATUS_SIZE;
+	bb->words = 0;
+
+	retval = eud_bb_collect(bb, flush);
+	if (retval != ERROR_OK && flush) {
+		LOG_DEBUG("EUD: %u bit-bang reply bytes missing", bb->pending);
+		bb->pending = 0;
+		retval = ERROR_OK;
+	}
+	return retval;
+}
+
+static int eud_bb_add(struct eud_bb_stream *bb, const uint8_t *seq, unsigned int bit_len)
+{
+	for (unsigned int bit = 0; bit < bit_len; bit++) {
+		uint32_t data = buf_get_u32(seq, bit, 1) ? EUD_SWD_BB_SWDIO : 0;
+		for (unsigned int edge = 0; edge < 2; edge++) {
+			uint32_t word = EUD_SWD_BB_IDLE | data | (edge ? 0 : EUD_SWD_BB_SWCLK);
+			bb->out[bb->words * 5] = EUD_SWD_CMD_BITBANG;
+			h_u32_to_le(&bb->out[bb->words * 5 + 1], word);
+			if (++bb->words == EUD_SWD_BB_WORDS_PER_PACKET) {
+				int retval = eud_bb_send(bb, false);
+				if (retval != ERROR_OK)
+					return retval;
+			}
+		}
+	}
+	return ERROR_OK;
+}
+
+static int eud_bitbang_sequence(const uint8_t *seq, unsigned int bit_len)
+{
+	struct eud_bb_stream bb = { .words = 0, .pending = 0 };
+	int retval = eud_bb_add(&bb, seq, bit_len);
+	if (retval != ERROR_OK)
+		return retval;
+	return eud_bb_send(&bb, true);
+}
+
+/*
+ * quic/eud jtag_to_swd_adiv6(): JTAG-to-dormant, then dormant-to-SWD with
+ * line reset, as one bit-banged stream. Qualcomm's driver uses this for
+ * JTAG_TO_SWD whenever the DAP is ADIv6 (molokai and newer).
+ */
+static int eud_jtag_to_swd_adiv6(void)
+{
+	struct eud_bb_stream bb = { .words = 0, .pending = 0 };
+	int retval = eud_bb_add(&bb, swd_seq_jtag_to_dormant, swd_seq_jtag_to_dormant_len);
+	if (retval == ERROR_OK)
+		retval = eud_bb_add(&bb, swd_seq_dormant_to_swd, swd_seq_dormant_to_swd_len);
+	if (retval != ERROR_OK)
+		return retval;
+	return eud_bb_send(&bb, true);
+}
+
 static int eud_ditms_sequence(const uint8_t *seq, unsigned int bit_len)
 {
 	int retval = ERROR_OK;
@@ -470,23 +582,27 @@ static int eud_swd_switch_seq(enum swd_special_seq seq)
 		LOG_DEBUG("SWD line reset");
 		return eud_ditms_sequence(swd_seq_line_reset, swd_seq_line_reset_len);
 	case JTAG_TO_SWD:
+		if (dap_get_last_adi_version() == 6) {
+			LOG_DEBUG("JTAG-to-SWD (ADIv6, bit-banged through dormant)");
+			return eud_jtag_to_swd_adiv6();
+		}
 		LOG_DEBUG("JTAG-to-SWD");
 		return eud_ditms_sequence(swd_seq_jtag_to_swd, swd_seq_jtag_to_swd_len);
 	case JTAG_TO_DORMANT:
 		LOG_DEBUG("JTAG-to-DORMANT");
-		return eud_ditms_sequence(swd_seq_jtag_to_dormant, swd_seq_jtag_to_dormant_len);
+		return eud_bitbang_sequence(swd_seq_jtag_to_dormant, swd_seq_jtag_to_dormant_len);
 	case SWD_TO_JTAG:
 		LOG_DEBUG("SWD-to-JTAG ignored");
 		return ERROR_OK;
 	case SWD_TO_DORMANT:
 		LOG_DEBUG("SWD-to-DORMANT");
-		return eud_ditms_sequence(swd_seq_swd_to_dormant, swd_seq_swd_to_dormant_len);
+		return eud_bitbang_sequence(swd_seq_swd_to_dormant, swd_seq_swd_to_dormant_len);
 	case DORMANT_TO_SWD:
 		LOG_DEBUG("DORMANT-to-SWD");
-		return eud_ditms_sequence(swd_seq_dormant_to_swd, swd_seq_dormant_to_swd_len);
+		return eud_bitbang_sequence(swd_seq_dormant_to_swd, swd_seq_dormant_to_swd_len);
 	case DORMANT_TO_JTAG:
 		LOG_DEBUG("DORMANT-to-JTAG");
-		return eud_ditms_sequence(swd_seq_dormant_to_jtag, swd_seq_dormant_to_jtag_len);
+		return eud_bitbang_sequence(swd_seq_dormant_to_jtag, swd_seq_dormant_to_jtag_len);
 	default:
 		LOG_ERROR("Sequence %d not supported", seq);
 		return ERROR_FAIL;
@@ -843,16 +959,54 @@ static int eud_quit(void)
 	return ERROR_OK;
 }
 
+/*
+ * ADIv6 parts are reset through the CTL peripheral (RCTLR_SRST_N), not the
+ * SWD bit-bang reset lines, and TRST is left alone; the DPIDR reads around the
+ * assert keep the SWD link up. This is Qualcomm's eud_assert_reset_adiv6().
+ */
+static int eud_reset_adiv6(int srst)
+{
+	uint32_t dpidr;
+
+	if (srst) {
+		eud_swd_queue_transfer(swd_cmd(true, false, DP_DPIDR), 0, &dpidr, 0);
+		if (eud_swd_run_queue() != ERROR_OK)
+			LOG_DEBUG("EUD: DPIDR read before SRST failed");
+	}
+
+	int retval = eud_open(EUD_CTL_PID, &eud_ctl);
+	if (retval != ERROR_OK)
+		return retval;
+	retval = eud_op(&eud_ctl, srst ? EUD_CTL_CMD_CTLOUT_CLR : EUD_CTL_CMD_CTLOUT_SET,
+			EUD_CTL_RCTLR_SRST_N);
+	eud_close(&eud_ctl);
+	if (retval != ERROR_OK)
+		return retval;
+
+	if (srst) {
+		eud_swd_queue_transfer(swd_cmd(true, false, DP_DPIDR), 0, &dpidr, 0);
+		if (eud_swd_run_queue() == ERROR_OK)
+			LOG_DEBUG("EUD: ADIv6 SRST asserted, DPIDR 0x%08" PRIx32, dpidr);
+	}
+	return ERROR_OK;
+}
+
 static int eud_reset(int trst, int srst)
 {
-	uint32_t value = EUD_SWD_BB_RESET_DEFAULT;
+	int retval;
 
-	if (srst)
-		value &= ~(EUD_SWD_BB_RCTLR_SRST_N | EUD_SWD_BB_GPIO_SRST_N);
-	if (trst)
-		value &= ~EUD_SWD_BB_DAP_TRST_N;
+	if (dap_get_last_adi_version() == 6) {
+		retval = eud_reset_adiv6(srst);
+	} else {
+		uint32_t value = EUD_SWD_BB_RESET_DEFAULT;
 
-	int retval = eud_swd_bitbang(value);
+		if (srst)
+			value &= ~(EUD_SWD_BB_RCTLR_SRST_N | EUD_SWD_BB_GPIO_SRST_N);
+		if (trst)
+			value &= ~EUD_SWD_BB_DAP_TRST_N;
+
+		retval = eud_swd_bitbang(value);
+	}
 	if (retval != ERROR_OK)
 		return retval;
 

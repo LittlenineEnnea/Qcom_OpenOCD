@@ -791,6 +791,8 @@ int dap_to_swd(struct adiv5_dap *dap);
 /* Put debug link into JTAG mode */
 int dap_to_jtag(struct adiv5_dap *dap);
 
+unsigned int dap_get_last_adi_version(void);
+
 extern const struct command_registration dap_instance_commands[];
 
 struct arm_dap_object;
