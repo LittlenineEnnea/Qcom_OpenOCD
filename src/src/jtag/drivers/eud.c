@@ -149,23 +149,31 @@ static struct eud_swd_transfer eud_queue[EUD_SWD_BUFFER_SIZE];
 static unsigned int eud_queue_len;
 static unsigned int eud_queue_out_len;
 static unsigned int eud_queue_in_len;
-static int eud_speed_index = 0xa;
-
-static const unsigned int eud_speed_khz[] = {
-	120000,
-	80000,
-	60000,
-	40000,
-	30000,
-	15000,
-	7500,
-	3750,
-	1875,
-	938,
-	469,
-	234,
-	117,
+/*
+ * SWD_CMD_FREQ dividers, as Qualcomm's own OpenOCD EUD driver maps them
+ * (eud_khz()/eud_speed_div() in their openocd.exe). Only indices 2..6 are
+ * used there. Other indices (e.g. 7 or 0xa) make the peripheral drain its
+ * OUT FIFO so slowly that it overflows, after which the SWD function stops
+ * answering USB OUT tokens (kIOReturnNotResponding on macOS) until it is
+ * power-cycled through CTL. Seen on palawan.
+ */
+#define EUD_SPEED_INDEX_MIN			2
+#define EUD_SPEED_INDEX_MAX			6
+static const unsigned int eud_speed_khz[EUD_SPEED_INDEX_MAX + 1] = {
+	[2] = 15000,
+	[3] = 10000,
+	[4] = 7500,
+	[5] = 3750,
+	[6] = 1875,
 };
+
+/* Qualcomm's library initializes the peripheral with index 6 */
+static int eud_speed_index = 6;
+
+static bool eud_speed_index_valid(int speed_index)
+{
+	return speed_index >= EUD_SPEED_INDEX_MIN && speed_index <= EUD_SPEED_INDEX_MAX;
+}
 
 static void eud_close(struct eud_device *dev)
 {
@@ -342,7 +350,7 @@ static int eud_power_cycle_swd(void)
 
 static int eud_swd_set_speed_index(int speed_index)
 {
-	if (speed_index < 0 || speed_index >= (int)ARRAY_SIZE(eud_speed_khz)) {
+	if (!eud_speed_index_valid(speed_index)) {
 		LOG_ERROR("EUD speed index %d is out of range", speed_index);
 		return ERROR_FAIL;
 	}
@@ -403,12 +411,11 @@ static int eud_ditms_u16(uint16_t tms, uint16_t count)
 static int eud_swd_prepare(void)
 {
 	/*
-	 * Resync the data toggle on both ends and drop response bytes an
-	 * earlier, interrupted session may have left in the IN FIFO.
+	 * Drop response bytes an earlier, interrupted session may have left in
+	 * the IN FIFO. Do not clear_halt here: the EUD does not reset its data
+	 * toggle on CLEAR_FEATURE(ENDPOINT_HALT), so the host would then
+	 * discard the next IN packet as a duplicate.
 	 */
-	libusb_clear_halt(eud_swd.handle, EUD_EP_OUT);
-	libusb_clear_halt(eud_swd.handle, EUD_EP_IN);
-
 	uint8_t stale[512];
 	int transferred;
 	for (unsigned int i = 0; i < 8; i++) {
@@ -791,7 +798,7 @@ static int eud_reset(int trst, int srst)
 
 static int eud_speed(int speed)
 {
-	if (speed < 0 || speed >= (int)ARRAY_SIZE(eud_speed_khz)) {
+	if (!eud_speed_index_valid(speed)) {
 		LOG_ERROR("EUD speed index %d is out of range", speed);
 		return ERROR_FAIL;
 	}
@@ -804,16 +811,21 @@ static int eud_speed(int speed)
 	return eud_swd_set_speed_index(speed);
 }
 
+/* Pick the fastest supported clock that does not exceed the request */
 static int eud_khz(int khz, int *jtag_speed)
 {
-	int selected = ARRAY_SIZE(eud_speed_khz) - 1;
+	int selected = EUD_SPEED_INDEX_MAX;
 
-	for (unsigned int i = 0; i < ARRAY_SIZE(eud_speed_khz); i++) {
+	for (int i = EUD_SPEED_INDEX_MIN; i <= EUD_SPEED_INDEX_MAX; i++) {
 		if ((unsigned int)khz >= eud_speed_khz[i]) {
 			selected = i;
 			break;
 		}
 	}
+
+	if ((unsigned int)khz != eud_speed_khz[selected])
+		LOG_INFO("EUD supports 15000, 10000, 7500, 3750 and 1875 kHz; using %u kHz",
+			eud_speed_khz[selected]);
 
 	*jtag_speed = selected;
 	return ERROR_OK;
@@ -821,7 +833,7 @@ static int eud_khz(int khz, int *jtag_speed)
 
 static int eud_speed_div(int speed, int *khz)
 {
-	if (speed < 0 || speed >= (int)ARRAY_SIZE(eud_speed_khz))
+	if (!eud_speed_index_valid(speed))
 		return ERROR_FAIL;
 
 	*khz = eud_speed_khz[speed];
