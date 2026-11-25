@@ -1,0 +1,163 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the qcm6490 chipset configuration.
+#=======================================================================  -->
+<pmic_config>    
+    <chipset name="qcm6490">
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+            <apps func = "start_kernel" end = "/init"> </apps>
+            <systemd-boot func = "efi_main" end = "/boot"> </systemd-boot>
+            <systemd-stub func = "efi_main" end = "/boot"> </systemd-stub>
+            <efi-stub func = "efi_pe_entry" end = "/firmware"> </efi-stub>
+        </source_config>
+        <arch>
+            <apss arch = "aarch64"  gdbPort = "3333"> </apss>
+        </arch>
+        <adi>
+            <version adi_version= "5"> </version>
+        </adi>
+        <sleep_config>
+            <pmic_sleep sleep_time = "11" > </pmic_sleep>
+        </sleep_config>
+        <wdog_config>
+            <!-- WDOG control register address can be read from ipcat (just search for WDOG_CTL_REG)-->
+            <WDOG_CTL_REG reg = "0xC230004"> </WDOG_CTL_REG>
+        </wdog_config>
+        <hyp_config>
+            <QHEE_ENTRY_VECTOR_ADDR address="0x80080000"> </QHEE_ENTRY_VECTOR_ADDR>
+            <GUNY_ENTRY_VECTOR_ADDR address="0x80000000"> </GUNY_ENTRY_VECTOR_ADDR>
+        </hyp_config>
+        <file_info>
+            <sec_dll_path path = "boot_images/Build/KodiakLAA/Core/DEBUG_CLANG140LINUX/AARCH64/QcomPkg/XBLCore/XBLCore/DEBUG/Sec.dll"> </sec_dll_path>
+        </file_info>
+        <spmi_config>
+            <spmi_write reg="0x0C2A22FC" value ="0x1"> </spmi_write>
+            <spmi_write reg="0x0C2A2300" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A010" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A000" value ="0x1"> </spmi_write>
+
+            <spmi_write reg="0xC40AF08" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC40A014" value ="0x3"> </spmi_write>
+            <spmi_write reg="0xC40A014" value ="0x3"> </spmi_write>
+            <spmi_write reg="0xC40AF00" value ="0x0"> </spmi_write>
+
+            <spmi_write reg="0xC40AF04" value ="0x600BA9"> </spmi_write>
+            <spmi_write reg="0xC40AF14" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A048" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC40A018" value ="0x1FF"> </spmi_write>
+
+            <spmi_write reg="0xC40AF10" value ="0x7F"> </spmi_write>
+            <spmi_write reg="0xC40AF04" value ="0x600BA9"> </spmi_write>
+        </spmi_config>
+        <reset_config>
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x00000000"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000570"> </reset_write>
+
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x00000007"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000560"> </reset_write>
+
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x00000020"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000150"> </reset_write>
+
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x000000A5"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000570"> </reset_write>
+        </reset_config>
+        <adsp_config >
+            <ukernel_path ukernel_file='UKERNEL_kodiak.adsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "4"> </hw_threads>
+            <tlb_entries tlb_num= "192"> </tlb_entries> 
+            <wdog_ctl wdog_ctl= "0x4104004"></wdog_ctl>  
+            <core_clk_reg core_clk = "0x147004"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x147010"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x338901C"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x3000038"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x338a00c"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x338a014"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x3000018"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x338A058"> </core_clk_reg>
+            <root_path root_path='ROOT_kodiak.adsp.prodQ.elf'> </root_path>
+
+        </adsp_config>
+        <cdsp_config>
+            <ukernel_path ukernel_file='UKERNEL_kodiak.cdsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "6"> </hw_threads>
+            <tlb_entries tlb_num= "128"> </tlb_entries> 
+            <wdog_ctl wdog= "0xA384004"></wdog_ctl>  
+            <root_path root_path='ROOT_kodiak.cdsp.prodQ.elf'> </root_path>     
+        </cdsp_config>
+        <mpss_config>
+            <ukernel_path ukernel_file='orig_MODEM_PROC_IMG_kodiak.gen.testQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "6"> </hw_threads>
+            <tlb_entries tlb_num= "192"> </tlb_entries> 
+            <wdog_ctl wdog= "0xA384004"></wdog_ctl>  
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+             <etm_clk_reg etm_clk= "0x86808000"> </etm_clk_reg>
+             <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->
+            <etm_clk_reg etm_clk= "0x86808008"> </etm_clk_reg>           
+            <root_path root_path='orig_MODEM_PROC_IMG_kodiak.gen.testQ.elf'> </root_path>           
+        </mpss_config>
+        <configure_target>
+        	<UefiRamEntryAddr Addr= "0x9FC00000"></UefiRamEntryAddr>
+			<RamFvAddr Addr= "0x9F800000"></RamFvAddr>
+			<InfoBlkPtrOffset Addr= "0x4D8000"></InfoBlkPtrOffset>
+			<SharedImemAddress Addr= "0x146AA000"></SharedImemAddress>
+            <Arch Arch= "64"></Arch>
+            <CoreObj path="boot_images/Build/KodiakLAA/Core/DEBUG_CLANG140LINUX/AARCH64"> </CoreObj>
+        </configure_target>
+        <InitOffsets>
+            <ArchString ArchString="64-bit"></ArchString>
+            <PtrSize PtrSize="0x8"></PtrSize>
+            <BinFolder BinFolder="Bin64"></BinFolder>
+            <IBlkUartLogBufferPtr Offset="0x38"></IBlkUartLogBufferPtr>
+            <IBlkUartLogBufferLen Offset="0x40"></IBlkUartLogBufferLen>
+            <EfiHeaderOffset Offset="0x260"></EfiHeaderOffset>
+            <SecLoadAddrOffset Offset="0x2000"></SecLoadAddrOffset>
+            <IBlkRuntimeDbgTablePtr Offset="0x88"></IBlkRuntimeDbgTablePtr>
+            <IBlkRtDbgTableEntryCnt Offset="0x90"></IBlkRtDbgTableEntryCnt>
+            <IBlkSystemTablePtr Offset="0x70"></IBlkSystemTablePtr>
+            <IBlkDxeSymbolAddr Offset="0x98"></IBlkDxeSymbolAddr>
+            <RvaOffsetAdd Offset="0x102C"></RvaOffsetAdd>
+            <ImgBaseDbgEntryOffset Offset="0x138"></ImgBaseDbgEntryOffset>
+            <IBlkConfigTablePtr Offset="0x58"></IBlkConfigTablePtr>
+            <IBlkConfigTableCount Offset="0x60"></IBlkConfigTableCount>
+            <RvaOffsetSub Offset="0xC4"></RvaOffsetSub>
+            <STCfgTbl Offset="0x70"></STCfgTbl>
+            <STCfgItemCnt Offset="0x68"></STCfgItemCnt>
+            <IBlkHobBaseOffset Offset="0x30"></IBlkHobBaseOffset>
+            <MemMapGcdOffset Offset="0x14"></MemMapGcdOffset>
+            <GcdBaseOffset Offset="0x4"></GcdBaseOffset>
+            <GcdEndOffset Offset="0xC"></GcdEndOffset>
+            <GcdAttribOffset Offset="0x1C"></GcdAttribOffset>
+            <RvaOffset Offset="0x1F58"></RvaOffset>
+            <CoreLoadPeImageOffset Offset="249"></CoreLoadPeImageOffset>
+            <IBlkCmdStartOffset Offset="0xA0"></IBlkCmdStartOffset>
+            <IBlkTotalCmdSize Offset="0xA4"></IBlkTotalCmdSize>
+            <IBlkSymbolCmdString Offset="0xA8"></IBlkSymbolCmdString>
+            <IBlkLoaderBkpt Offset="0xB0"></IBlkLoaderBkpt>
+            <IBlkDbgStopDrvrStr Offset="0xB8"></IBlkDbgStopDrvrStr>
+            <IBlkModuleName Offset="0xD8"></IBlkModuleName>
+            <IBlkSymbolCmdSize Offset="0xF8"></IBlkSymbolCmdSize>
+            <IBlkLastCmdSize Offset="0xFC"></IBlkLastCmdSize>
+            <IBlkDirStr Offset="0x100"></IBlkDirStr>
+            <IBlkBdsHotkey Offset="0x120"></IBlkBdsHotkey>
+            <IBlkForceDisableHWWdog Offset="0x140"></IBlkForceDisableHWWdog>
+        </InitOffsets>
+    </chipset>
+</pmic_config>
+ 

@@ -1,0 +1,14 @@
+//
+// Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @file extensions.json
+//
+// @section Description
+// This file manages and recommends extensions for a workspace.
+{
+    "recommendations": [
+        "vadimcn.vscode-lldb",
+        "ms-python.python"
+    ]
+}

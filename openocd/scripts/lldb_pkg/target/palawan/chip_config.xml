@@ -1,0 +1,35 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the Palawan chipset configuration.
+#=======================================================================  -->
+<pmic_config>    
+    <chipset name="palawan" >
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+        </source_config>
+        <arch>
+            <apss arch = "aarch64"  gdbPort = "3333"> </apss>
+        </arch>
+        <adi>
+            <version adi_version= "5"> </version>
+        </adi>
+        <sleep_config>
+            <pmic_sleep sleep_time = "0" > </pmic_sleep>
+        </sleep_config>
+        <hyp_config>
+            <QHEE_ENTRY_VECTOR_ADDR address="0x80080000"> </QHEE_ENTRY_VECTOR_ADDR>
+            <GUNY_ENTRY_VECTOR_ADDR address="0x80000000"> </GUNY_ENTRY_VECTOR_ADDR>
+        </hyp_config>
+        <wdog_config>
+            <!-- WDOG control register address can be read from ipcat (just search for WDOG_CTL_REG)-->
+            <WDOG_CTL_REG reg = "0xC230004"> </WDOG_CTL_REG>
+        </wdog_config>
+    </chipset>
+</pmic_config>

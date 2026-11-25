@@ -1,0 +1,189 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the Clarence chipset configuration.
+#=======================================================================  -->
+<pmic_config>
+    <chipset name="Clarence" >
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+            <aoss func = "init_phase_1" end= "core/"> </aoss>
+            <adsp func = "main" end= "adsp_proc/"> </adsp>
+            <tme func="tmeVerifySignature" end="tme_proc/"> </tme>
+        </source_config>
+        <arch>
+            <apss arch = "aarch64"  gdbPort = "3333"> </apss>
+            <aoss arch = "cortex_m" gdbPort = "3101"> </aoss>
+            <tme arch="riscv" gdbPort="3102"> </tme>
+        </arch>
+        <adi>
+            <version adi_version= "5"> </version>
+        </adi>
+        <sleep_config>
+            <pmic_sleep sleep_time = "2" > </pmic_sleep>
+        </sleep_config>
+        <wdog_config>
+            <!-- WDOG control register address can be read from ipcat (just search for WDOG_CTL_REG)-->
+            <WDOG_CTL_REG reg="0xC230004"> </WDOG_CTL_REG>
+            <APSS_WDT_TMR1_WDOG_CTL reg = "0x17410008" > </APSS_WDT_TMR1_WDOG_CTL>
+            <APSS_WDT_TMR2_WDOG_CTL reg = "0x17411008" > </APSS_WDT_TMR2_WDOG_CTL>
+        </wdog_config>
+		<aop_config>
+            <!-- SWAOCSR_CS_SWAOCSR_LOCKACCESS  -->
+            <LOCKACCESS reg="0xEC11FB0" value ="0xC5ACCE55"> </LOCKACCESS>
+            <!-- SWAOCSR_CS_SWAOCSR_SWCSYSPWRCTRL  -->
+            <SWCSYSPWRCTRL reg="0xEC110E0" value ="0x1"> </SWCSYSPWRCTRL>
+            <!-- QDSS_AOSS_APB_SWAOCSR_CS_SWAOCSR_SWDBGPWRCTRL -->
+            <SWDBGPWRCTRL reg="0x10B11000" value ="0x1"> </SWDBGPWRCTRL>
+            <!-- QDSS_AOSS_APB_SWAOCSR_CS_SWAOCSR_PDCPWRUPREQ  -->
+            <PDCPWRUPREQ reg="0x10B11064" value ="0x1"> </PDCPWRUPREQ>
+            <!-- QDSS_AOSS_APB_SWAOCSR_CS_SWAOCSR_SWCSYSPWRCTRL  -->
+            <SWCSYSPWRCTRL reg="0x10B110E0" value ="0x1"> </SWCSYSPWRCTRL>
+		    <DEMCR_REG reg="0xE000EDFC" value ="0x1"> </DEMCR_REG>
+		</aop_config>
+        <hyp_config>
+            <QHEE_ENTRY_VECTOR_ADDR address="0x83640000"> </QHEE_ENTRY_VECTOR_ADDR>
+            <GUNY_ENTRY_VECTOR_ADDR address="0x83600000"> </GUNY_ENTRY_VECTOR_ADDR>
+        </hyp_config>
+        <spmi_config>
+            <spmi_write reg="0x0C260208" value ="0x80000000"> </spmi_write>
+            <spmi_write reg="0xC42C010" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC42C000" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC42E808" value ="0x0"> </spmi_write>
+
+            <spmi_write reg="0XC42C014" value ="0x3"> </spmi_write>
+            <spmi_write reg="0xC42C014" value ="0x3"> </spmi_write>
+            <spmi_write reg="0xC42E800" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC42E804" value ="0x600BA9"> </spmi_write>
+
+            <spmi_write reg="0xC42E814" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC42C048" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC42C018" value ="0xFF"> </spmi_write>
+            <spmi_write reg="0xC42E810" value ="0x7F"> </spmi_write>
+
+            <spmi_write reg="0xC42E804" value ="0x600BA9"> </spmi_write>
+        </spmi_config>
+        <reset_config>
+            <reset_write reg="0xC402BFC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC42DBFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xC7FF010" value ="0x00000000"> </reset_write>
+            <reset_write reg="0xC7FF000" value ="0x00000570" delay = "0.002"> </reset_write>
+
+            <reset_write reg="0xC402BFC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC42DBFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xC7FF010" value ="0x00000007"> </reset_write>
+            <reset_write reg="0xC7FF000" value ="0x00000560" delay = "0.002"> </reset_write>
+
+            <reset_write reg="0xC402BFC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC42DBFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xC7FF010" value ="0x00000020"> </reset_write>
+            <reset_write reg="0xC7FF000" value ="0x00000150" delay = "0.002"> </reset_write>
+
+            <reset_write reg="0xC402BFC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC42DBFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xC7FF010" value ="0x000000A5"> </reset_write>
+            <reset_write reg="0xC7FF000" value ="0x00000570" delay = "0.500"> </reset_write>
+        </reset_config>
+        <adsp_config>
+            <ukernel_path ukernel_file='UKERNEL_clarence.adsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "4"> </hw_threads>
+            <tlb_entries tlb_num= "192"> </tlb_entries> 
+            <wdog_ctl wdog= "0x3084004"></wdog_ctl>  
+            <core_clk_reg core_clk = "0x157004"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x157014"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x340901C"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x3393004"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x340A018"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x340A014"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x3000018"> </core_clk_reg>
+            <core_clk_reg core_clk= "0x340A058"> </core_clk_reg> 
+            <!--etm enablement DAP:0x80B48000-->
+            <etm_clk_reg etm_clk= "0x80B48000"> </etm_clk_reg>
+            <etm_clk_reg etm_clk= "0x80B48008"> </etm_clk_reg>          
+            <root_path root_path='ROOT_clarence.adsp.prodQ.elf'> </root_path>           
+        </adsp_config>
+        <mpss_config>
+            <ukernel_path ukernel_file='UKERNEL_clarence.gen.testQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "8"> </hw_threads>
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <wdog_ctl wdog= "0x4484004"></wdog_ctl>  
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x80808000"> </etm_clk_reg>
+             <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->
+            <etm_clk_reg etm_clk= "0x80808008"> </etm_clk_reg>           
+            <root_path root_path='orig_MODEM_PROC_IMG_clarence.gen.testQ.elf'> </root_path> 
+        </mpss_config>
+        <configure_target>
+        	<UefiRamEntryAddr Addr = "0xA7000000"></UefiRamEntryAddr>
+			<RamFvAddr Addr = "0xA7AD9000"></RamFvAddr>
+			<InfoBlkPtrOffset Addr = "0x00601000"></InfoBlkPtrOffset>
+			<SharedImemAddress Addr = "0x146AA000"></SharedImemAddress>
+            <Arch Arch= "64"></Arch>
+            <CoreObj path="boot_images/Build/ClarenceLAA/Core/DEBUG_CLANG120LINUX/AARCH64"> </CoreObj>
+        </configure_target>
+        <InitOffsets>
+            <ArchString ArchString="64-bit"></ArchString>
+            <PtrSize PtrSize="0x8"></PtrSize>
+            <BinFolder BinFolder="Bin64"></BinFolder>
+            <IBlkUartLogBufferPtr Offset ="0x38"></IBlkUartLogBufferPtr>
+            <IBlkUartLogBufferLen Offset ="0x40"></IBlkUartLogBufferLen>
+            <EfiHeaderOffset Offset ="0x260"></EfiHeaderOffset>
+            <SecLoadAddrOffset Offset ="0x2000"></SecLoadAddrOffset>
+            <IBlkRuntimeDbgTablePtr Offset ="0x88"></IBlkRuntimeDbgTablePtr>
+            <IBlkRtDbgTableEntryCnt Offset ="0x90"></IBlkRtDbgTableEntryCnt>
+            <IBlkSystemTablePtr Offset ="0x70"></IBlkSystemTablePtr>
+            <IBlkDxeSymbolAddr Offset ="0x98"></IBlkDxeSymbolAddr>
+            <RvaOffsetAdd Offset ="0x102C"></RvaOffsetAdd>
+            <ImgBaseDbgEntryOffset Offset ="0x138"></ImgBaseDbgEntryOffset>
+            <IBlkConfigTablePtr Offset ="0x58"></IBlkConfigTablePtr>
+            <IBlkConfigTableCount Offset ="0x60"></IBlkConfigTableCount>
+            <RvaOffsetSub Offset ="0xC4"></RvaOffsetSub>
+            <STCfgTbl Offset ="0x70"></STCfgTbl>
+            <STCfgItemCnt Offset ="0x68"></STCfgItemCnt>
+            <IBlkHobBaseOffset Offset ="0x30"></IBlkHobBaseOffset>
+            <MemMapGcdOffset Offset ="0x14"></MemMapGcdOffset>
+            <GcdBaseOffset Offset ="0x4"></GcdBaseOffset>
+            <GcdEndOffset Offset ="0xC"></GcdEndOffset>
+            <GcdAttribOffset Offset ="0x1C"></GcdAttribOffset>
+            <RvaOffset Offset ="0x1F58"></RvaOffset>
+            <CoreLoadPeImageOffset Offset ="249"></CoreLoadPeImageOffset>
+            <IBlkCmdStartOffset Offset ="0xA0"></IBlkCmdStartOffset>
+            <IBlkTotalCmdSize Offset ="0xA4"></IBlkTotalCmdSize>
+            <IBlkSymbolCmdString Offset ="0xA8"></IBlkSymbolCmdString>
+            <IBlkLoaderBkpt Offset ="0xB0"></IBlkLoaderBkpt>
+            <IBlkDbgStopDrvrStr Offset ="0xB8"></IBlkDbgStopDrvrStr>
+            <IBlkModuleName Offset ="0xD8"></IBlkModuleName>
+            <IBlkSymbolCmdSize Offset ="0xF8"></IBlkSymbolCmdSize>
+            <IBlkLastCmdSize Offset ="0xFC"></IBlkLastCmdSize>
+            <IBlkDirStr Offset ="0x100"></IBlkDirStr>
+            <IBlkBdsHotkey Offset ="0x120"></IBlkBdsHotkey>
+            <IBlkForceDisableHWWdog Offset ="0x140"></IBlkForceDisableHWWdog>
+        </InitOffsets>
+        <wake_cpu0>
+            <write reg="0x10B11FB0" value ="0xc5acce55"> </write>
+            <write reg="0x10B11060" value ="0x0"> </write>
+            <write reg="0x10B110DC" value ="0x0"> </write>
+            <write reg="0x10B11FB0" value ="0xa5a5a5a5"> </write>
+        </wake_cpu0>
+        <riscv_config>
+            <tme_config>
+                <tme_debug_base addr="0x90CD0000"> </tme_debug_base>
+                <dmcontrol offset_addr="0x40" dmcontrol_data_1="0x1" dmcontrol_data_2="0x80000009"> </dmcontrol>
+                <!-- This breakpoint is at the return address of tme_seq_init_post_ram_load_apps function-->
+                <tme_seq_init_post_ram_load_apps addr="0x30d92c" > </tme_seq_init_post_ram_load_apps>
+                <!-- This breakpoint is at the pbl_auth_hash_seg function-->
+                <pbl_auth_hash_seg addr="0x30a9e0" > </pbl_auth_hash_seg>
+                <tme_qtmr_qtmr_v1_cntp_ctl_f0 addr="0x20C0102C" val="0x2"> </tme_qtmr_qtmr_v1_cntp_ctl_f0>
+                <tme_mrom_entry_point addr="0x216000"> </tme_mrom_entry_point>
+                <tme_fw_entry_point addr="0x412800"> </tme_fw_entry_point>
+                <pause_point_reg addr="0x222361D8" val="0x1"> </pause_point_reg>
+            </tme_config>
+        </riscv_config>
+    </chipset>
+</pmic_config>
