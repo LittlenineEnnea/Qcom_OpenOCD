@@ -576,15 +576,71 @@ static int eud_swd_queue_transfer(uint8_t cmd, uint32_t value,
 	return ERROR_OK;
 }
 
+/*
+ * Qualcomm's EUD driver keeps re-requesting debug and system power: before an
+ * AP access or a DP SELECT/RDBUFF access it writes ABORT=STKERRCLR and then
+ * CTRL/STAT=CDBGPWRUPREQ|CSYSPWRUPREQ. It does this for the first 500 such
+ * accesses, then every "eud trigger_seq" accesses (0 = every time), and always
+ * while SRST is asserted. Some chipset launch configs rely on
+ * "eud trigger_seq 0" to survive debug power collapse.
+ */
+#define EUD_PWRUP_EAGER_ACCESSES	500
+#define EUD_PWRUP_AFTER_RESET		10
+static uint64_t eud_trigger_seq = 3500;
+static uint64_t eud_cmd_count;
+static unsigned int eud_pwrup_eager;
+static bool eud_pwrup_needed;
+
+static int eud_queue_ctrl_stat_pwrup(void)
+{
+	return eud_swd_queue_transfer(swd_cmd(false, false, DP_CTRL_STAT),
+			CDBGPWRUPREQ | CSYSPWRUPREQ, NULL, 0);
+}
+
+static int eud_queue_pwrup(uint8_t cmd)
+{
+	eud_cmd_count++;
+
+	/* leave DPIDR/ABORT and CTRL/STAT accesses alone */
+	if (!(cmd & SWD_CMD_APNDP) && !(cmd & 0x10))
+		return ERROR_OK;
+
+	bool needed = eud_pwrup_needed;
+	if (eud_pwrup_eager < EUD_PWRUP_EAGER_ACCESSES) {
+		eud_pwrup_eager++;
+		needed = true;
+	}
+	if (eud_trigger_seq == 0) {
+		needed = true;
+	} else if (eud_cmd_count > eud_trigger_seq) {
+		eud_cmd_count = 0;
+		needed = true;
+	}
+	if (!needed)
+		return ERROR_OK;
+
+	int retval = eud_swd_queue_transfer(swd_cmd(false, false, DP_ABORT),
+			STKERRCLR, NULL, 0);
+	if (retval != ERROR_OK)
+		return retval;
+	return eud_queue_ctrl_stat_pwrup();
+}
+
 static int eud_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay_clk)
 {
 	assert(cmd & SWD_CMD_RNW);
+	int retval = eud_queue_pwrup(cmd);
+	if (retval != ERROR_OK)
+		return retval;
 	return eud_swd_queue_transfer(cmd, 0, value, ap_delay_clk);
 }
 
 static int eud_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay_clk)
 {
 	assert(!(cmd & SWD_CMD_RNW));
+	int retval = eud_queue_pwrup(cmd);
+	if (retval != ERROR_OK)
+		return retval;
 	return eud_swd_queue_transfer(cmd, value, NULL, ap_delay_clk);
 }
 
@@ -731,6 +787,9 @@ static int eud_swd_run_queue(void)
 
 static int eud_init(void)
 {
+	eud_cmd_count = 0;
+	eud_pwrup_eager = 0;
+	eud_pwrup_needed = false;
 	eud_queue_len = 0;
 	eud_queue_out_len = 0;
 	eud_queue_in_len = 0;
@@ -793,8 +852,57 @@ static int eud_reset(int trst, int srst)
 	if (trst)
 		value &= ~EUD_SWD_BB_DAP_TRST_N;
 
-	return eud_swd_bitbang(value);
+	int retval = eud_swd_bitbang(value);
+	if (retval != ERROR_OK)
+		return retval;
+
+	/* like Qualcomm: keep power requested through reset, re-request after it */
+	bool was_in_reset = eud_pwrup_needed;
+	eud_pwrup_needed = srst;
+	if (was_in_reset && !srst) {
+		for (unsigned int i = 0; i < EUD_PWRUP_AFTER_RESET; i++)
+			eud_queue_ctrl_stat_pwrup();
+		if (eud_swd_run_queue() != ERROR_OK)
+			LOG_DEBUG("EUD: power-up request after reset was not acknowledged");
+	}
+
+	return ERROR_OK;
 }
+
+COMMAND_HANDLER(eud_handle_trigger_seq)
+{
+	if (CMD_ARGC > 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	if (CMD_ARGC == 1)
+		COMMAND_PARSE_NUMBER(u64, CMD_ARGV[0], eud_trigger_seq);
+
+	command_print(CMD, "eud trigger_seq %" PRIu64, eud_trigger_seq);
+	return ERROR_OK;
+}
+
+static const struct command_registration eud_subcommand_handlers[] = {
+	{
+		.name = "trigger_seq",
+		.handler = eud_handle_trigger_seq,
+		.mode = COMMAND_ANY,
+		.help = "re-request debug/system power every N SWD accesses "
+			"(0 = before every AP access)",
+		.usage = "[count]",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration eud_command_handlers[] = {
+	{
+		.name = "eud",
+		.mode = COMMAND_ANY,
+		.help = "EUD adapter commands",
+		.chain = eud_subcommand_handlers,
+		.usage = "",
+	},
+	COMMAND_REGISTRATION_DONE
+};
 
 static int eud_speed(int speed)
 {
@@ -852,6 +960,7 @@ struct adapter_driver eud_adapter_driver = {
 	.name = "eud",
 	.transport_ids = TRANSPORT_SWD,
 	.transport_preferred_id = TRANSPORT_SWD,
+	.commands = eud_command_handlers,
 
 	.init = eud_init,
 	.quit = eud_quit,
