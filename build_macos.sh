@@ -59,6 +59,9 @@ bundle_dylibs() {
 
 build_openocd() {
     echo "==> openocd"
+    # automake insists on the submodule dirs even though Homebrew's jimtcl and
+    # libjaylink are used; git does not keep empty dirs, so recreate them
+    mkdir -p "$ROOT/src/jimtcl" "$ROOT/src/src/jtag/drivers/libjaylink"
     (cd "$ROOT/src" && { [[ -x configure ]] || ./bootstrap nosubmodule; })
     rm -rf "$BUILD/openocd"
     mkdir -p "$BUILD/openocd"
