@@ -10,3 +10,12 @@ __pycache__/
 
 # runtime output of the LLDB scripts
 /openocd/scripts/temp/
+
+# IDA databases
+*.i64
+*.idb
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
