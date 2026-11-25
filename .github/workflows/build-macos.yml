@@ -1,0 +1,108 @@
+name: Build macOS package
+
+# Manual only: Actions tab -> "Build macOS package" -> Run workflow
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner image (the package needs this macOS version or newer)
+        type: choice
+        default: macos-latest
+        options:
+          - macos-latest
+          - macos-15
+          - macos-14
+      release:
+        description: Also publish the package as a GitHub release
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 120
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          brew install autoconf automake libtool pkgconf texinfo \
+            libusb capstone jimtcl libjaylink gmp mpfr zstd
+          echo "$(brew --prefix)/opt/libtool/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Build openocd and gdb
+        run: ./build_macos.sh openocd gdb
+
+      - name: Smoke test
+        run: |
+          openocd/bin/openocd --version
+          gdb/bin/gdb --version | head -n 1
+          # every binary must load only system libraries or the bundled ones
+          if otool -L openocd/bin/openocd openocd/lib/*.dylib gdb/bin/gdb gdb/lib/*.dylib \
+              | grep -E "$(brew --prefix)|/usr/local/"; then
+            echo "::error::binary still links a Homebrew library"
+            exit 1
+          fi
+          # parse a chipset config (no hardware needed)
+          cd openocd/scripts
+          ../bin/openocd -f ../config/interface/eud_swd.cfg \
+            -f lldb_pkg/target/palawan/palawan.cfg \
+            -c "bindto 127.0.0.1" -c targets -c shutdown
+
+      - name: Package
+        id: pkg
+        run: |
+          name="Qcom_OpenOCD-macos-$(uname -m)-$(git rev-parse --short HEAD)"
+          dist="dist/$name"
+          mkdir -p "$dist"
+          # openocd: macOS binary, bundled libs, Qualcomm scripts and configs
+          rsync -a --exclude '*.exe' --exclude '*.dll' --exclude '*.i64' \
+            --exclude 'doc/' --exclude '__pycache__/' --exclude '.DS_Store' \
+            openocd "$dist/"
+          # gdb: binary, bundled libs, data files and helper scripts (no sources)
+          rsync -a --exclude 'src/' --exclude '.DS_Store' gdb "$dist/"
+          cp launch_vscode.sh launch_lldb.sh "$dist/"
+          cat > "$dist/README-macOS.txt" <<'EOF'
+          Qualcomm OpenOCD + GDB for macOS (Apple Silicon)
+
+          Binaries are ad-hoc signed. If macOS blocks them after download, run:
+            xattr -dr com.apple.quarantine <this folder>
+
+          Debug APSS over EUD SWD:
+            cd openocd/scripts
+            ../bin/openocd -f ../config/interface/eud_swd.cfg \
+              -f lldb_pkg/target/<chipset>/<chipset>.cfg
+            # then, in another terminal:
+            gdb/bin/gdb -x gdb/bin/apss.gdb
+
+          Plug the EUD cable straight into the Mac, not through a hub or dock.
+          EOF
+          # tar keeps exec bits and symlinks; artifact zips would drop them
+          tar -C dist -czf "dist/$name.tar.gz" "$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "file=dist/$name.tar.gz" >> "$GITHUB_OUTPUT"
+          ls -lh "dist/$name.tar.gz"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pkg.outputs.name }}
+          path: ${{ steps.pkg.outputs.file }}
+          compression-level: 0
+          retention-days: 30
+
+      - name: Publish release
+        if: ${{ inputs.release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="macos-$(date -u +%Y%m%d)-$(git rev-parse --short HEAD)"
+          gh release create "$tag" "${{ steps.pkg.outputs.file }}" \
+            --target "$GITHUB_SHA" \
+            --title "macOS build $tag" \
+            --notes "Built by the \"Build macOS package\" workflow on ${{ inputs.runner }}. Extract with: tar xzf ${{ steps.pkg.outputs.name }}.tar.gz"

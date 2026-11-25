@@ -99,7 +99,8 @@ build_gdb() {
     make install-gdb DESTDIR="$BUILD/gdb/stage" >install.log
 
     local out="$ROOT/gdb"
-    rm -rf "$out/bin" "$out/share" "$out/lib"
+    # keep gdb/bin/apss.gdb and friends; only the binary is rebuilt
+    rm -rf "$out/bin/gdb" "$out/share" "$out/lib"
     mkdir -p "$out/bin" "$out/share"
     cp "$BUILD/gdb/stage/opt/qcom-gdb/bin/gdb" "$out/bin/gdb"
     cp -R "$BUILD/gdb/stage/opt/qcom-gdb/share/gdb" "$out/share/gdb"
