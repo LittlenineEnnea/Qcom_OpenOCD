@@ -11,6 +11,7 @@ struct riscv_program;
 #include "jtag/jtag.h"
 #include "target/semihosting_common.h"
 #include "target/target.h"
+#include "target/arm_adi_v5.h"
 #include "target/register.h"
 #include <helper/command.h>
 #include <helper/bits.h>
@@ -126,6 +127,8 @@ typedef struct {
 
 #define RISCV013_DTMCS_ABITS_MIN 7
 #define RISCV013_DTMCS_ABITS_MAX 32
+/* DMI address width used for a DM behind a DAP MEM-AP (no dtmcs to read) */
+#define RISCV013_DAP_ABITS 16
 
 struct reg_name_table {
 	unsigned int num_entries;
@@ -191,6 +194,12 @@ struct riscv_info {
 	unsigned int common_magic;
 
 	unsigned int dtm_version;
+
+	/* Set when the Debug Module sits behind a MEM-AP of an ARM DAP ("-dap")
+	 * instead of a JTAG DTM. DMI address N is then the bus word at
+	 * dap_dm_base + 4 * N. */
+	struct adiv5_ap *dap_ap;
+	target_addr_t dap_dm_base;
 
 	struct command_context *cmd_ctx;
 	void *version_specific;
@@ -411,7 +420,15 @@ struct riscv_private_config {
 	bool dcsr_cetrig;
 	bool detect_misa;
 	bool sba_flush_cache;
+	/* -dap / -ap-num, for a Debug Module reached through a MEM-AP */
+	struct adiv5_private_config adiv5;
 };
+
+/* The Debug Module is accessed through a DAP MEM-AP rather than a JTAG DTM. */
+static inline bool riscv_dmi_via_dap(const struct target *target)
+{
+	return target->has_dap;
+}
 
 static inline struct riscv_private_config
 *riscv_private_config(const struct target *target)

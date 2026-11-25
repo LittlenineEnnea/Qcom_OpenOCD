@@ -114,6 +114,9 @@ typedef struct {
 	unsigned int abs_chain_position;
 	/* The base address to access this DM on DMI */
 	uint32_t base;
+	/* Bus address and AP of a DM reached through a DAP MEM-AP */
+	uint64_t bus_base;
+	uint64_t ap_num;
 	/* The number of harts connected to this DM. */
 	int hart_count;
 	/* Indicates we already examined this DM, so don't need to do it again. */
@@ -275,12 +278,21 @@ static dm013_info_t *get_dm(struct target *target)
 		return info->dm;
 
 	unsigned int abs_chain_position = target->tap->abs_chain_position;
+	/* Behind a DAP, dbgbase is the DM's bus address and DMI addresses
+	 * start at 0 */
+	const bool via_dap = riscv_dmi_via_dap(target);
+	const uint32_t dmi_base = via_dap ? 0 : target->dbgbase;
+	const uint64_t bus_base = via_dap ? target->dbgbase : 0;
+	const uint64_t ap_num = via_dap
+		? riscv_private_config(target)->adiv5.ap_num : DP_APSEL_INVALID;
 
 	dm013_info_t *entry;
 	dm013_info_t *dm = NULL;
 	list_for_each_entry(entry, &dm_list, list) {
 		if (entry->abs_chain_position == abs_chain_position
-				&& entry->base == target->dbgbase) {
+				&& entry->base == dmi_base
+				&& entry->bus_base == bus_base
+				&& entry->ap_num == ap_num) {
 			dm = entry;
 			break;
 		}
@@ -296,7 +308,9 @@ static dm013_info_t *get_dm(struct target *target)
 		/* Safety check for dbgbase */
 		assert(target->dbgbase_set || target->dbgbase == 0);
 
-		dm->base = target->dbgbase;
+		dm->base = dmi_base;
+		dm->bus_base = bus_base;
+		dm->ap_num = ap_num;
 		dm->current_hartid = 0;
 		dm->hart_count = -1;
 		INIT_LIST_HEAD(&dm->target_list);
@@ -402,8 +416,11 @@ static uint32_t set_dmcontrol_hartsel(uint32_t initial, int hart_index)
 
 /*** Utility functions. ***/
 
-static void select_dmi(struct jtag_tap *tap)
+static void select_dmi(struct target *target)
 {
+	if (riscv_dmi_via_dap(target))
+		return;
+	struct jtag_tap *tap = target->tap;
 	if (bscan_tunnel_ir_width != 0) {
 		select_dmi_via_bscan(tap);
 		return;
@@ -438,10 +455,12 @@ static int increase_dmi_busy_delay(struct target *target)
 {
 	RISCV013_INFO(info);
 
-	int res = dtmcs_scan(target->tap, DTM_DTMCS_DMIRESET,
-			NULL /* discard result */);
-	if (res != ERROR_OK)
-		return res;
+	if (!riscv_dmi_via_dap(target)) {
+		int res = dtmcs_scan(target->tap, DTM_DTMCS_DMIRESET,
+				NULL /* discard result */);
+		if (res != ERROR_OK)
+			return res;
+	}
 
 	return riscv_scan_increase_delay(&info->learned_delays, RISCV_DELAY_BASE);
 }
@@ -2023,16 +2042,9 @@ static int examine_dm(struct target *target)
 	return ERROR_OK;
 }
 
-static int examine(struct target *target)
+/* Read dtmcs through JTAG and locate the DM on the DMI bus. */
+static int examine_dtm(struct target *target)
 {
-	/* We reset target state in case if something goes wrong during examine:
-	 * DTM/DM scans could fail or hart may fail to halt. */
-	target->state = TARGET_UNKNOWN;
-	target->debug_reason = DBG_REASON_UNDEFINED;
-
-	/* Don't need to select dbus, since the first thing we do is read dtmcontrol. */
-	LOG_TARGET_DEBUG(target, "dbgbase=0x%x", target->dbgbase);
-
 	uint32_t dtmcontrol;
 	if (dtmcs_scan(target->tap, 0, &dtmcontrol) != ERROR_OK || dtmcontrol == 0) {
 		LOG_TARGET_ERROR(target, "Could not scan dtmcontrol. Check JTAG connectivity/board power.");
@@ -2085,6 +2097,31 @@ static int examine(struct target *target)
 	if (check_dbgbase_exists(target) != ERROR_OK) {
 		LOG_TARGET_ERROR(target, "Could not find debug module with DMI base address (dbgbase) = 0x%x", target->dbgbase);
 		return ERROR_FAIL;
+	}
+
+	return ERROR_OK;
+}
+
+static int examine(struct target *target)
+{
+	/* We reset target state in case if something goes wrong during examine:
+	 * DTM/DM scans could fail or hart may fail to halt. */
+	target->state = TARGET_UNKNOWN;
+	target->debug_reason = DBG_REASON_UNDEFINED;
+
+	/* Don't need to select dbus, since the first thing we do is read dtmcontrol. */
+	LOG_TARGET_DEBUG(target, "dbgbase=0x%x", target->dbgbase);
+
+	riscv013_info_t *info = get_info(target);
+	if (riscv_dmi_via_dap(target)) {
+		info->index = target->coreid;
+		/* DMI addresses are word offsets from dbgbase on the MEM-AP */
+		info->abits = RISCV013_DAP_ABITS;
+		info->dtmcs_idle = 0;
+	} else {
+		int result = examine_dtm(target);
+		if (result != ERROR_OK)
+			return result;
 	}
 
 	int result = examine_dm(target);
@@ -2577,7 +2614,7 @@ static int batch_run(struct target *target, struct riscv_batch *batch)
 {
 	RISCV_INFO(r);
 	RISCV013_INFO(info);
-	select_dmi(target->tap);
+	select_dmi(target);
 	riscv_batch_add_nop(batch);
 	const int result = riscv_batch_run_from(batch, 0, &info->learned_delays,
 			/*resets_delays*/  r->reset_delays_wait >= 0,
@@ -2600,7 +2637,7 @@ static int batch_run(struct target *target, struct riscv_batch *batch)
 static int batch_run_timeout(struct target *target, struct riscv_batch *batch)
 {
 	RISCV013_INFO(info);
-	select_dmi(target->tap);
+	select_dmi(target);
 	riscv_batch_add_nop(batch);
 
 	size_t finished_scans = 0;
@@ -2971,7 +3008,7 @@ static int assert_reset(struct target *target)
 	RISCV013_INFO(info);
 	int result;
 
-	select_dmi(target->tap);
+	select_dmi(target);
 
 	if (target_has_event_action(target, TARGET_EVENT_RESET_ASSERT)) {
 		/* Run the user-supplied script if there is one. */
@@ -3025,7 +3062,7 @@ static int deassert_reset(struct target *target)
 		return ERROR_FAIL;
 	int result;
 
-	select_dmi(target->tap);
+	select_dmi(target);
 	/* Clear the reset, but make sure haltreq is still set */
 	uint32_t control = 0;
 	control = set_field(control, DM_DMCONTROL_DMACTIVE, 1);
@@ -4680,7 +4717,7 @@ read_memory_progbuf(struct target *target, const struct riscv_mem_access_args ar
 {
 	assert(riscv_mem_access_is_read(args));
 
-	select_dmi(target->tap);
+	select_dmi(target);
 	memset(args.read_buffer, 0, args.count * args.size);
 
 	if (execute_autofence(target) != ERROR_OK)

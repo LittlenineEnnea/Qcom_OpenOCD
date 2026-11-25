@@ -275,6 +275,82 @@ static void log_batch(const struct riscv_batch *batch, size_t start_idx,
 	}
 }
 
+/* Run the batch on a Debug Module that sits behind a DAP MEM-AP: each DMI
+ * access becomes a 32-bit bus access at dap_dm_base + 4 * address. The "in"
+ * buffers are filled the way a JTAG DTM would fill them, so every scan
+ * returns the result of the one before it. */
+static int riscv_batch_run_dap(struct riscv_batch *batch, size_t start_idx,
+		const struct riscv_scan_delays *delays, bool resets_delays,
+		size_t reset_delays_after)
+{
+	struct target *target = batch->target;
+	const struct riscv_info *r = riscv_info(target);
+	struct adiv5_ap *ap = r->dap_ap;
+	if (!ap) {
+		LOG_TARGET_ERROR(target, "Debug Module AP is not set up; examine the target first");
+		return ERROR_FAIL;
+	}
+
+	const unsigned int abits = riscv_get_dmi_address_bits(target);
+	const size_t count = batch->used_scans - start_idx;
+	uint32_t *read_data = calloc(count, sizeof(*read_data));
+	if (!read_data) {
+		LOG_ERROR("Out of memory");
+		return ERROR_FAIL;
+	}
+
+	LOG_TARGET_DEBUG(target, "Running batch of DMI accesses [%zu, %zu) via AP 0x%" PRIx64,
+			start_idx, batch->used_scans, ap->ap_num);
+
+	int retval = ERROR_OK;
+	for (size_t i = start_idx; i < batch->used_scans && retval == ERROR_OK; ++i) {
+		const uint8_t *out = batch->fields[i].out_value;
+		const unsigned int op = buf_get_u32(out, DTM_DMI_OP_OFFSET, DTM_DMI_OP_LENGTH);
+		const uint32_t address = buf_get_u32(out, DTM_DMI_ADDRESS_OFFSET, abits);
+		const target_addr_t bus = r->dap_dm_base + 4 * (target_addr_t)address;
+		if (op == DTM_DMI_OP_READ)
+			retval = mem_ap_read_u32(ap, bus, &read_data[i - start_idx]);
+		else if (op == DTM_DMI_OP_WRITE)
+			retval = mem_ap_write_u32(ap, bus,
+					buf_get_u32(out, DTM_DMI_DATA_OFFSET, DTM_DMI_DATA_LENGTH));
+	}
+
+	keep_alive();
+	if (retval == ERROR_OK)
+		retval = dap_run(ap->dap);
+	keep_alive();
+
+	if (retval != ERROR_OK) {
+		LOG_TARGET_ERROR(target, "Debug Module access through AP 0x%" PRIx64 " failed",
+				ap->ap_num);
+		free(read_data);
+		return ERROR_FAIL;
+	}
+
+	for (size_t i = start_idx; i < batch->used_scans; ++i) {
+		uint8_t *in = batch->fields[i].in_value;
+		if (!in)
+			continue;
+		uint32_t data = 0;
+		uint32_t address = 0;
+		if (i > start_idx) {
+			const uint8_t *prev = batch->fields[i - 1].out_value;
+			address = buf_get_u32(prev, DTM_DMI_ADDRESS_OFFSET, abits);
+			if (buf_get_u32(prev, DTM_DMI_OP_OFFSET, DTM_DMI_OP_LENGTH) == DTM_DMI_OP_READ)
+				data = read_data[i - 1 - start_idx];
+		}
+		buf_set_u32(in, DTM_DMI_OP_OFFSET, DTM_DMI_OP_LENGTH, DTM_DMI_OP_SUCCESS);
+		buf_set_u32(in, DTM_DMI_DATA_OFFSET, DTM_DMI_DATA_LENGTH, data);
+		buf_set_u32(in, DTM_DMI_ADDRESS_OFFSET, abits, address);
+	}
+	free(read_data);
+
+	log_batch(batch, start_idx, delays, resets_delays, reset_delays_after);
+	batch->was_run = true;
+	batch->last_scan_delay = 0;
+	return ERROR_OK;
+}
+
 int riscv_batch_run_from(struct riscv_batch *batch, size_t start_idx,
 		const struct riscv_scan_delays *delays, bool resets_delays,
 		size_t reset_delays_after)
@@ -284,6 +360,10 @@ int riscv_batch_run_from(struct riscv_batch *batch, size_t start_idx,
 	assert(batch->last_scan == RISCV_SCAN_TYPE_NOP);
 	assert(!batch->was_run || riscv_batch_was_scan_busy(batch, start_idx));
 	assert(start_idx == 0 || !riscv_batch_was_scan_busy(batch, start_idx - 1));
+
+	if (riscv_dmi_via_dap(batch->target))
+		return riscv_batch_run_dap(batch, start_idx, delays, resets_delays,
+				reset_delays_after);
 
 	if (batch->was_run)
 		add_idle_before_batch(batch, start_idx, delays);

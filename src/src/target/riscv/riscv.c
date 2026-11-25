@@ -494,6 +494,7 @@ static struct riscv_private_config *alloc_default_riscv_private_config(void)
 		config->dcsr_ebreak_fields[i] = true;
 
 	config->detect_misa = true;
+	config->adiv5.ap_num = DP_APSEL_INVALID;
 
 	return config;
 }
@@ -659,7 +660,9 @@ static int riscv_jim_configure(struct target *target,
 	int e = jim_nvp_name2value_obj(goi->interp, nvp_config_opts,
 				goi->argv[0], &n);
 	if (e != JIM_OK)
-		return JIM_CONTINUE;
+		/* -dap and -ap-num: Debug Module behind a DAP MEM-AP */
+		return adiv5_jim_configure_ext(target, goi, &config->adiv5,
+				ADI_CONFIGURE_DAP_OPTIONAL);
 
 	e = jim_getopt_obj(goi, NULL);
 	if (e != JIM_OK)
@@ -783,9 +786,17 @@ static void riscv_deinit_target(struct target *target)
 	free(target->private_config);
 
 	struct riscv_info *info = target->arch_info;
-	struct target_type *tt = get_target_type(target);
-	if (!tt)
-		LOG_TARGET_ERROR(target, "Could not identify target type.");
+	if (info && info->dap_ap) {
+		dap_put_ap(info->dap_ap);
+		info->dap_ap = NULL;
+	}
+	/* A target that was never examined (e.g. -defer-examine) has no type yet */
+	struct target_type *tt = NULL;
+	if (info && info->dtm_version != DTM_DTMCS_VERSION_UNKNOWN) {
+		tt = get_target_type(target);
+		if (!tt)
+			LOG_TARGET_ERROR(target, "Could not identify target type.");
+	}
 
 	if (riscv_reg_flush_all(target) != ERROR_OK)
 		LOG_TARGET_ERROR(target, "Failed to flush registers. Ignoring this error.");
@@ -2587,6 +2598,38 @@ static int old_or_new_riscv_step(struct target *target, bool current,
 		handle_breakpoints, true /* handle callbacks*/);
 }
 
+/* Find and set up the MEM-AP that the Debug Module of a "-dap" target sits on. */
+static int riscv_dap_init(struct target *target)
+{
+	RISCV_INFO(info);
+	struct adiv5_private_config *pc = &riscv_private_config(target)->adiv5;
+
+	if (!info->dap_ap) {
+		if (pc->ap_num == DP_APSEL_INVALID) {
+			if (dap_find_get_ap(pc->dap, AP_TYPE_APB_AP, &info->dap_ap) != ERROR_OK) {
+				LOG_TARGET_ERROR(target, "Could not find APB-AP for debug access");
+				return ERROR_FAIL;
+			}
+		} else {
+			info->dap_ap = dap_get_ap(pc->dap, pc->ap_num);
+			if (!info->dap_ap) {
+				LOG_TARGET_ERROR(target, "Cannot get AP 0x%" PRIx64, pc->ap_num);
+				return ERROR_FAIL;
+			}
+		}
+	}
+
+	int retval = mem_ap_init(info->dap_ap);
+	if (retval != ERROR_OK) {
+		LOG_TARGET_ERROR(target, "Could not initialize the APB-AP");
+		return retval;
+	}
+	info->dap_dm_base = target->dbgbase;
+	LOG_TARGET_DEBUG(target, "Debug Module at 0x%" TARGET_PRIxADDR " on AP 0x%" PRIx64,
+			info->dap_dm_base, info->dap_ap->ap_num);
+	return ERROR_OK;
+}
+
 static int riscv_examine(struct target *target)
 {
 	LOG_TARGET_DEBUG(target, "Starting examination");
@@ -2595,16 +2638,23 @@ static int riscv_examine(struct target *target)
 		return ERROR_OK;
 	}
 
-	/* Don't need to select dbus, since the first thing we do is read dtmcontrol. */
-
 	RISCV_INFO(info);
-	uint32_t dtmcontrol;
-	if (dtmcs_scan(target->tap, 0, &dtmcontrol) != ERROR_OK || dtmcontrol == 0) {
-		LOG_TARGET_ERROR(target, "Could not read dtmcontrol. Check JTAG connectivity/board power.");
-		return ERROR_FAIL;
+	uint32_t dtm_version;
+	if (riscv_dmi_via_dap(target)) {
+		/* No DTM to ask: the DM is memory mapped behind a MEM-AP */
+		if (riscv_dap_init(target) != ERROR_OK)
+			return ERROR_FAIL;
+		dtm_version = DTM_DTMCS_VERSION_1_0;
+	} else {
+		/* Don't need to select dbus, since the first thing we do is read dtmcontrol. */
+		uint32_t dtmcontrol;
+		if (dtmcs_scan(target->tap, 0, &dtmcontrol) != ERROR_OK || dtmcontrol == 0) {
+			LOG_TARGET_ERROR(target, "Could not read dtmcontrol. Check JTAG connectivity/board power.");
+			return ERROR_FAIL;
+		}
+		LOG_TARGET_DEBUG(target, "dtmcontrol=0x%" PRIx32, dtmcontrol);
+		dtm_version = get_field(dtmcontrol, DTMCONTROL_VERSION);
 	}
-	LOG_TARGET_DEBUG(target, "dtmcontrol=0x%" PRIx32, dtmcontrol);
-	uint32_t dtm_version = get_field(dtmcontrol, DTMCONTROL_VERSION);
 	LOG_TARGET_DEBUG(target, "version=0x%" PRIx32, dtm_version);
 
 	struct target_type *tt;
