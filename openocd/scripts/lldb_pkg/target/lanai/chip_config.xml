@@ -1,0 +1,50 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the Lanai chipset configuration.
+#=======================================================================  -->
+<pmic_config>    
+    <chipset name="LANAI" >
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+        </source_config>
+        <arch>
+            <apss arch = "aarch64"  gdbPort = "3333"> </apss>
+            <mpss arch = "hexagon"  gdbPort = "3003"> </mpss>
+        </arch>
+        <adi>
+            <version adi_version= "5"> </version>
+        </adi>
+        <sleep_config>
+            <pmic_sleep sleep_time = "0" > </pmic_sleep>
+        </sleep_config>
+		<cdsp_config>
+            <ukernel_path ukernel_file='UKERNEL_lanai.cdsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "8"> </hw_threads>
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <wdog_ctl wdog= "0x4484004"></wdog_ctl>     
+            <etm_clk_reg etm_clk= "0x80988000"> </etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x80988008"> </etm_clk_reg> 
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->             
+            <root_path root_path='ROOT_lanai.cdsp.prodQ.elf'> </root_path>           
+        </cdsp_config>
+        <cdsp_config>
+            <ukernel_path ukernel_file='orig_MODEM_PROC_IMG_lanai.oempd.testQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "8"> </hw_threads>
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <wdog_ctl wdog= "0x32384004"></wdog_ctl>     
+            <etm_clk_reg etm_clk= "0x80808000"> </etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x80808008"> </etm_clk_reg> 
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->             
+            <root_path root_path='OEMPD_IMG_lanai.oempd.testQ.elf'> </root_path>           
+        </cdsp_config>
+    </chipset>
+</pmic_config>

@@ -1,0 +1,149 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the Bonito chipset configuration.
+#=======================================================================  -->
+<pmic_config>    
+    <chipset name="balsam" >
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+            <adsp func = "main" end= "adsp_proc/"> </adsp>
+            <cdsp func = "main" end= "cdsp_proc/"> </cdsp>
+            <soccp func = "main" end = "/soccp_proc/"></soccp>
+        </source_config>
+        <arch>
+            <apss arch = "aarch64"  gdbPort = "3333" > </apss>
+            <adsp arch = "hexagon"  gdbPort = "3001" > </adsp>
+            <soccp arch = "riscv"  gdbPort = "3100" > </soccp>
+        </arch>
+        <adi>
+            <version adi_version= "5"> </version>
+        </adi>
+        <sleep_config>
+            <pmic_sleep sleep_time = "7" > </pmic_sleep>
+        </sleep_config>
+        <hyp_config>
+            <QHEE_ENTRY_VECTOR_ADDR address=""> </QHEE_ENTRY_VECTOR_ADDR>
+            <GUNY_ENTRY_VECTOR_ADDR address="0x80000000"> </GUNY_ENTRY_VECTOR_ADDR>
+        </hyp_config>
+        <wdog_config>
+            <!-- WDOG control register address can be read from ipcat (just search for WDOG_CTL_REG)-->
+            <WDOG_CTL_REG reg = "0xC234004"> </WDOG_CTL_REG>
+            <APSS_WDT_TMR1_WDOG_CTL reg = "0x1741000C" > </APSS_WDT_TMR1_WDOG_CTL>
+            <APSS_WDT_TMR2_WDOG_CTL reg = "0x17411008" > </APSS_WDT_TMR2_WDOG_CTL>
+        </wdog_config>
+        <configure_target>
+        	<UefiRamEntryAddr Addr = "0xA7000000"></UefiRamEntryAddr>
+			<RamFvAddr Addr = "0xA7AD9000"></RamFvAddr>
+			<InfoBlkPtrOffset Addr = "0x00601000"></InfoBlkPtrOffset>
+			<SharedImemAddress Addr = "0x14680000"></SharedImemAddress>
+            <Arch Arch= "64"></Arch>
+            <CoreObj path="boot_images/Build/BalsamLAA/Core/DEBUG_CLANG180LINUX/AARCH64"> </CoreObj>
+        </configure_target>
+        <InitOffsets>
+            <ArchString ArchString="64-bit"></ArchString>
+            <PtrSize PtrSize="0x8"></PtrSize>
+            <BinFolder BinFolder="Bin64"></BinFolder>
+            <IBlkUartLogBufferPtr Offset ="0x38"></IBlkUartLogBufferPtr>
+            <IBlkUartLogBufferLen Offset ="0x40"></IBlkUartLogBufferLen>
+            <EfiHeaderOffset Offset ="0x260"></EfiHeaderOffset>
+            <SecLoadAddrOffset Offset ="0x2000"></SecLoadAddrOffset>
+            <IBlkRuntimeDbgTablePtr Offset ="0x88"></IBlkRuntimeDbgTablePtr>
+            <IBlkRtDbgTableEntryCnt Offset ="0x90"></IBlkRtDbgTableEntryCnt>
+            <IBlkSystemTablePtr Offset ="0x70"></IBlkSystemTablePtr>
+            <IBlkDxeSymbolAddr Offset ="0x98"></IBlkDxeSymbolAddr>
+            <RvaOffsetAdd Offset ="0x102C"></RvaOffsetAdd>
+            <ImgBaseDbgEntryOffset Offset ="0x138"></ImgBaseDbgEntryOffset>
+            <IBlkConfigTablePtr Offset ="0x58"></IBlkConfigTablePtr>
+            <IBlkConfigTableCount Offset ="0x60"></IBlkConfigTableCount>
+            <RvaOffsetSub Offset ="0xC4"></RvaOffsetSub>
+            <STCfgTbl Offset ="0x70"></STCfgTbl>
+            <STCfgItemCnt Offset ="0x68"></STCfgItemCnt>
+            <IBlkHobBaseOffset Offset ="0x30"></IBlkHobBaseOffset>
+            <MemMapGcdOffset Offset ="0x14"></MemMapGcdOffset>
+            <GcdBaseOffset Offset ="0x4"></GcdBaseOffset>
+            <GcdEndOffset Offset ="0xC"></GcdEndOffset>
+            <GcdAttribOffset Offset ="0x1C"></GcdAttribOffset>
+            <RvaOffset Offset ="0x1F58"></RvaOffset>
+            <CoreLoadPeImageOffset Offset ="249"></CoreLoadPeImageOffset>
+            <IBlkCmdStartOffset Offset ="0xA0"></IBlkCmdStartOffset>
+            <IBlkTotalCmdSize Offset ="0xA4"></IBlkTotalCmdSize>
+            <IBlkSymbolCmdString Offset ="0xA8"></IBlkSymbolCmdString>
+            <IBlkLoaderBkpt Offset ="0xB0"></IBlkLoaderBkpt>
+            <IBlkDbgStopDrvrStr Offset ="0xB8"></IBlkDbgStopDrvrStr>
+            <IBlkModuleName Offset ="0xD8"></IBlkModuleName>
+            <IBlkSymbolCmdSize Offset ="0xF8"></IBlkSymbolCmdSize>
+            <IBlkLastCmdSize Offset ="0xFC"></IBlkLastCmdSize>
+            <IBlkDirStr Offset ="0x100"></IBlkDirStr>
+            <IBlkBdsHotkey Offset ="0x120"></IBlkBdsHotkey>
+            <IBlkForceDisableHWWdog Offset ="0x140"></IBlkForceDisableHWWdog>
+        </InitOffsets>
+        <wake_cpu0>
+            <write reg="0x11311FB0" value ="0xc5acce55"> </write>
+            <write reg="0x11311060" value ="0x0"> </write>
+            <write reg="0x113110DC" value ="0x0"> </write>
+            <write reg="0x11311FB0" value ="0xa5a5a5a5"> </write>
+        </wake_cpu0>
+        <q6_config>
+            <hwio_pil hwio_pil="hwio_pil.cmm"> </hwio_pil>
+            <Q6DbgVal 
+                nAWMQ6DbgVal = "skip" 
+                nSWMQ6DbgVal = "skip" >
+            </Q6DbgVal>
+        </q6_config>
+        <riscv_config>
+            <soccp_config>
+                <soccp_debug_base addr="0x91388000"> </soccp_debug_base>
+                <dmcontrol offset_addr="0x40" dmcontrol_data_1="0x1" dmcontrol_data_2="0x80000009"> </dmcontrol>
+            </soccp_config>
+        </riscv_config>
+        <mpss_config>
+            <ukernel_path ukernel_file='UKERNEL_balsam.gen.testQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "8"> </hw_threads>
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <wdog_ctl wdog= "0x4484004"></wdog_ctl>  
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x80808000"> </etm_clk_reg>
+             <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->
+            <etm_clk_reg etm_clk= "0x80808008"> </etm_clk_reg>           
+            <root_path root_path='orig_MODEM_PROC_IMG_balsam.gen.testQ.elf'> </root_path> 
+        </mpss_config>
+        <cdsp_config>
+            <ukernel_path ukernel_file='UKERNEL_balsam.cdsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "6"> </hw_threads>
+            <!-- <hw_threads thrd_num= "4"> </hw_threads> -->
+            <tlb_entries tlb_num= "128"> </tlb_entries> 
+            <!-- TURING_QDSP6SS_WDOG_CTL -->
+            <wdog_ctl wdog= "0x32384004"></wdog_ctl>  
+            <!-- QDSS_TURING_APB_TURING_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x91190000"> </etm_clk_reg>
+             <!-- QDSS_TURING_APB_TURING_QDSP6_ETM_RESET  -->
+            <etm_clk_reg etm_clk= "0x91190008"> </etm_clk_reg>           
+            <root_path root_path='ROOT_balsam.cdsp.prodQ.elf'> </root_path> 
+        </cdsp_config>
+        <adsp_config>
+            <ukernel_path ukernel_file='UKERNEL_balsam.adsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "12"> </hw_threads>
+            <!-- <hw_threads thrd_num= "4"> </hw_threads> -->
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <!-- TURING_QDSP6SS_WDOG_CTL -->
+            <wdog_ctl wdog= "0x6C84004"></wdog_ctl>  
+            <!-- QDSS_LPASS_LPI_QDSP6_QDSP6_ETM_CLK_EN   -->
+            <etm_clk_reg etm_clk= "0x91348000"> </etm_clk_reg>
+             <!-- QDSS_LPASS_LPI_QDSP6_QDSP6_ETM_CLK_RESET  -->
+            <etm_clk_reg etm_clk= "0x91348008"> </etm_clk_reg>           
+            <root_path root_path='ROOT_balsam.adsp.prodQ.elf'> </root_path> 
+            <tcsr_reg 
+                tcsr = "0xC26001C" 
+                value = "0x20000000" >
+            </tcsr_reg>
+        </adsp_config>
+        
+    </chipset>
+</pmic_config>

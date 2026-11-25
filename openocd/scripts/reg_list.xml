@@ -1,0 +1,143 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file reg_list.xml
+#
+# @section Description
+# XML file containing the information ARM coprocessor register configuration.
+#======================================================================== -->
+
+<reg_list>
+    <Register category="Memory_Management_Unit">
+        <register reg="HSTR_EL2"> </register>
+        <register reg="HACR_EL2"> </register>
+        <register reg="TTBR0_EL1"> </register>
+        <register reg="TTBR1_EL1"> </register>
+        <register reg="TTBR0_EL12"> </register>
+        <register reg="TTBR1_EL12"> </register>
+        <register reg="TTBR0_EL2"> </register>
+        <register reg="TTBR1_EL2"> </register>
+        <register reg="TTBR0_EL3"> </register>
+        <register reg="TCR_EL1"> </register>
+        <register reg="TCR_EL3"> </register>
+        <register reg="VTTBR_EL2"> </register>
+        <register reg="PAR_EL1"> </register>
+        <register reg="MAIR_EL1"> </register>
+        <register reg="MAIR_EL12"> </register>
+        <register reg="MAIR_EL2"> </register>
+        <register reg="MAIR_EL3"> </register>
+        <register reg="AMAIR_EL1"> </register>
+        <register reg="AMAIR_EL12"> </register>
+        <register reg="AMAIR_EL2"> </register>
+        <register reg="AMAIR_EL3"> </register>
+        <register reg="DACR32_EL2"> </register>
+    </Register>
+    <Register category="System_Control_and_Configuration">
+        <register reg="SDER32_EL3"> </register>
+        <register reg="SCTLR_EL1"> </register>
+        <register reg="SCTLR_EL2"> </register>
+        <register reg="SCTLR_EL3"> </register>
+        <register reg="ACTLR_EL1"> </register>
+        <register reg="ACTLR_EL2"> </register>
+        <register reg="ACTLR_EL3"> </register>
+        <register reg="CPACR_EL1"> </register>
+        <register reg="CPTR_EL2"> </register>
+        <register reg="CPTR_EL3"> </register>
+        <register reg="SCR_EL3"> </register>
+        <register reg="HCR_EL2"> </register>
+        <register reg="AFSR0_EL1"> </register>
+        <register reg="AFSR1_EL1"> </register>
+        <register reg="AFSR0_EL2"> </register>
+        <register reg="AFSR1_EL2"> </register>
+        <register reg="AFSR0_EL3"> </register>
+        <register reg="AFSR1_EL3"> </register>
+        <register reg="ESR_EL1"> </register>
+        <register reg="ESR_EL2"> </register>
+        <register reg="ESR_EL3"> </register>
+        <register reg="DISR_EL1"> </register>
+        <register reg="VSESR_EL2"> </register>
+        <register reg="VDISR_EL2"> </register>
+        <register reg="IFSR32_EL2"> </register>
+        <register reg="FAR_EL1"> </register>
+        <register reg="FAR_EL2"> </register>
+        <register reg="FAR_EL3"> </register>
+        <register reg="HPFAR_EL2"> </register>
+        <register reg="CBAR_EL1"> </register>
+        <register reg="VBAR_EL1"> </register>
+        <register reg="VBAR_EL2"> </register>
+        <register reg="VBAR_EL3"> </register>
+        <register reg="RVBAR_EL3"> </register>
+        <register reg="RMR_EL1"> </register>
+        <register reg="RMR_EL3"> </register>
+        <register reg="ISR_EL1"> </register>
+        <register reg="CONTEXTIDR_EL1"> </register>
+        <register reg="CONTEXTIDR_EL2"> </register>
+        <register reg="TPIDR_EL0"> </register>
+        <register reg="TPIDRRO_EL0"> </register>
+        <register reg="TPIDR_EL1"> </register>
+        <register reg="TPIDR_EL2"> </register>
+        <register reg="TPIDR_EL3"> </register>
+    </Register>
+    <Register category="Cache_Control_and_Configuration">
+        <register reg="CTR_EL0"> </register>
+        <register reg="CSSELR_EL1"> </register>
+        <register reg="CCSIDR_EL1"> </register>
+        <register reg="CLIDR_EL1"> </register>
+    </Register>
+    <Register category="Generic_Interrupt_Controller_System_Register">
+        <register reg="ICC_AP0R0_EL1"> </register>
+        <register reg="ICC_AP1R0_EL1"> </register>
+        <register reg="ICC_ASGI1R_EL1"> </register>
+        <register reg="ICC_BPR0_EL1"> </register>
+        <register reg="ICC_BPR1_EL1"> </register>
+        <register reg="ICC_CTLR_EL1"> </register>
+        <register reg="ICC_CTLR_EL3"> </register>
+        <register reg="ICC_DIR_EL1"> </register>
+        <register reg="ICC_EOIR0_EL1"> </register>
+        <register reg="ICC_EOIR1_EL1"> </register>
+        <register reg="ICC_HPPIR0_EL1"> </register>
+        <register reg="ICC_HPPIR1_EL1"> </register>
+        <register reg="ICC_IAR0_EL1"> </register>
+        <register reg="ICC_IAR1_EL1"> </register>
+        <register reg="ICC_IGRPEN0_EL1"> </register>
+        <register reg="ICC_IGRPEN1_EL1"> </register>
+        <register reg="ICC_IGRPEN1_EL3"> </register>
+        <register reg="ICC_PMR_EL1"> </register>
+        <register reg="ICC_RPR_EL1"> </register>
+        <register reg="ICC_SGI0R_EL1"> </register>
+        <register reg="ICC_SGI1R_EL1"> </register>
+        <register reg="ICC_SRE_EL1"> </register>
+        <register reg="ICC_SRE_EL2"> </register>
+        <register reg="ICC_SRE_EL3"> </register>
+        <register reg="ICV_AP0R0_EL1"> </register>
+        <register reg="ICV_AP1R0_EL1"> </register>
+        <register reg="ICV_BPR0_EL1"> </register>
+        <register reg="ICV_BPR1_EL1"> </register>
+        <register reg="ICV_CTLR_EL1"> </register>
+        <register reg="ICV_DIR_EL1"> </register>
+        <register reg="ICV_EOIR0_EL1"> </register>
+        <register reg="ICV_EOIR1_EL1"> </register>
+        <register reg="ICV_HPPIR0_EL1"> </register>
+        <register reg="ICV_HPPIR1_EL1"> </register>
+        <register reg="ICV_IAR0_EL1"> </register>
+        <register reg="ICV_IAR1_EL1"> </register>
+        <register reg="ICV_IGRPEN0_EL1"> </register>
+        <register reg="ICV_IGRPEN1_EL1"> </register>
+        <register reg="ICV_PMR_EL1"> </register>
+        <register reg="ICV_RPR_EL1"> </register>
+        <register reg="ICH_AP0R0_EL2"> </register>
+        <register reg="ICH_AP1R0_EL2"> </register>
+        <register reg="ICH_EISR_EL2"> </register>
+        <register reg="ICH_ELRSR_EL2"> </register>
+        <register reg="ICH_HCR_EL2"> </register>
+        <register reg="ICH_LR0_EL2"> </register>
+        <register reg="ICH_LR1_EL2"> </register>
+        <register reg="ICH_LR2_EL2"> </register>
+        <register reg="ICH_LR3_EL2"> </register>
+        <register reg="ICH_MISR_EL2"> </register>
+        <register reg="ICH_VMCR_EL2"> </register>
+        <register reg="ICH_VTR_EL2"> </register>
+    </Register>
+</reg_list>

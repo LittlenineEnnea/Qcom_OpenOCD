@@ -1,0 +1,5 @@
+settings set target.load-cwd-lldbinit true
+settings set auto-confirm on
+platform select remote-linux
+command script import openocd_lldb.py
+set_chipset -s notarget

@@ -1,0 +1,101 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the Molokai chipset configuration.
+#=======================================================================  -->
+ <pmic_config>
+     <chipset name="molokai" >
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+            <soccp func="main" end="/soccp_proc/"></soccp>
+            <aoss func="init_phase_1" end="core/"> </aoss>
+        </source_config>
+        <arch>
+            <apss arch = "aarch64"  gdbPort = "3333" > </apss>
+            <soccp arch="riscv" gdbPort="3100"> </soccp>
+            <aoss arch="riscv" gdbPort="3101"> </aoss>
+        </arch>
+        <adi>
+            <version adi_version= "6"> </version>
+        </adi>
+        <sleep_config>
+            <pmic_sleep sleep_time = "5" > </pmic_sleep>
+        </sleep_config>
+        <hyp_config>
+            <QHEE_ENTRY_VECTOR_ADDR address=""> </QHEE_ENTRY_VECTOR_ADDR>
+            <GUNY_ENTRY_VECTOR_ADDR address="0x80000000"> </GUNY_ENTRY_VECTOR_ADDR>
+        </hyp_config>
+        <wdog_config>
+            <!-- WDOG control register address can be read from ipcat (just search for WDOG_CTL_REG)-->
+            <WDOG_CTL_REG reg = "0x20C24004"> </WDOG_CTL_REG>
+        </wdog_config>
+        <configure_target>
+            <UefiRamEntryAddr Addr = "0xA7000000"></UefiRamEntryAddr>
+            <RamFvAddr Addr = "0xA7AD9000"></RamFvAddr>
+            <InfoBlkPtrOffset Addr = "0x00601000"></InfoBlkPtrOffset>
+            <SharedImemAddress Addr = "0x14680000"></SharedImemAddress>
+            <Arch Arch= "64"></Arch>
+            <CoreObj path="boot_images/Build/MolokaiLAA/Core/DEBUG_CLANG180LINUX/AARCH64"> </CoreObj>
+        </configure_target>
+        <InitOffsets>
+            <ArchString ArchString="64-bit"></ArchString>
+            <PtrSize PtrSize="0x8"></PtrSize>
+            <BinFolder BinFolder="Bin64"></BinFolder>
+            <IBlkUartLogBufferPtr Offset ="0x38"></IBlkUartLogBufferPtr>
+            <IBlkUartLogBufferLen Offset ="0x40"></IBlkUartLogBufferLen>
+            <EfiHeaderOffset Offset ="0x260"></EfiHeaderOffset>
+            <SecLoadAddrOffset Offset ="0x2000"></SecLoadAddrOffset>
+            <IBlkRuntimeDbgTablePtr Offset ="0x88"></IBlkRuntimeDbgTablePtr>
+            <IBlkRtDbgTableEntryCnt Offset ="0x90"></IBlkRtDbgTableEntryCnt>
+            <IBlkSystemTablePtr Offset ="0x70"></IBlkSystemTablePtr>
+            <IBlkDxeSymbolAddr Offset ="0x98"></IBlkDxeSymbolAddr>
+            <RvaOffsetAdd Offset ="0x102C"></RvaOffsetAdd>
+            <ImgBaseDbgEntryOffset Offset ="0x138"></ImgBaseDbgEntryOffset>
+            <IBlkConfigTablePtr Offset ="0x58"></IBlkConfigTablePtr>
+            <IBlkConfigTableCount Offset ="0x60"></IBlkConfigTableCount>
+            <RvaOffsetSub Offset ="0xC4"></RvaOffsetSub>
+            <STCfgTbl Offset ="0x70"></STCfgTbl>
+            <STCfgItemCnt Offset ="0x68"></STCfgItemCnt>
+            <IBlkHobBaseOffset Offset ="0x30"></IBlkHobBaseOffset>
+            <MemMapGcdOffset Offset ="0x14"></MemMapGcdOffset>
+            <GcdBaseOffset Offset ="0x4"></GcdBaseOffset>
+            <GcdEndOffset Offset ="0xC"></GcdEndOffset>
+            <GcdAttribOffset Offset ="0x1C"></GcdAttribOffset>
+            <RvaOffset Offset ="0x1F58"></RvaOffset>
+            <CoreLoadPeImageOffset Offset ="249"></CoreLoadPeImageOffset>
+            <IBlkCmdStartOffset Offset ="0xA0"></IBlkCmdStartOffset>
+            <IBlkTotalCmdSize Offset ="0xA4"></IBlkTotalCmdSize>
+            <IBlkSymbolCmdString Offset ="0xA8"></IBlkSymbolCmdString>
+            <IBlkLoaderBkpt Offset ="0xB0"></IBlkLoaderBkpt>
+            <IBlkDbgStopDrvrStr Offset ="0xB8"></IBlkDbgStopDrvrStr>
+            <IBlkModuleName Offset ="0xD8"></IBlkModuleName>
+            <IBlkSymbolCmdSize Offset ="0xF8"></IBlkSymbolCmdSize>
+            <IBlkLastCmdSize Offset ="0xFC"></IBlkLastCmdSize>
+            <IBlkDirStr Offset ="0x100"></IBlkDirStr>
+            <IBlkBdsHotkey Offset ="0x120"></IBlkBdsHotkey>
+            <IBlkForceDisableHWWdog Offset ="0x140"></IBlkForceDisableHWWdog>
+        </InitOffsets>
+        <wake_cpu0>
+            <write reg="0x11311FB0" value ="0xc5acce55"> </write>
+            <write reg="0x11311060" value ="0x0"> </write>
+            <write reg="0x113110dc" value ="0x0"> </write>
+            <write reg="0x11311FB0" value ="0xa5a5a5a5"> </write>
+        </wake_cpu0>
+        <riscv_config>
+            <soccp_config>
+                <soccp_debug_base addr="0x913A8000" > </soccp_debug_base>
+                <dmcontrol offset_addr="0x40" dmcontrol_data_1="0x1" dmcontrol_data_2="0x80000009"> </dmcontrol>
+            </soccp_config>
+            <aoss_config>
+                <aoss_debug_base addr="0x81320000"> </aoss_debug_base>
+                <dmcontrol offset_addr="0x40" dmcontrol_data_1="0x1" dmcontrol_data_2="0x80000009"> </dmcontrol>
+            </aoss_config>
+        </riscv_config>
+    </chipset>
+</pmic_config>

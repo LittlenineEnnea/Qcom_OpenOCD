@@ -1,0 +1,222 @@
+//
+// Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @file launch.json
+//
+// @section Description
+// This file defines configurations for how the debugger should behave when launching or attaching to an application.
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "chipset": "aldabra",
+    "inputs": [
+        {
+            "id": "subsystemName",
+            "type": "pickString",
+            "description": "Select the subsystem to attach to",
+            "options": [
+                "apss"
+            ],
+            "default": "apss"
+        }
+    ],
+    "configurations": [ 
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "PBL Debug",
+            "breakpointMode": "file",
+            "targetCreateCommands": [
+                "settings set auto-confirm on",
+                "settings set target.skip-prologue false",
+                "settings set target.prefer-dynamic-value no-dynamic-values",
+                "settings set target.enable-synthetic-value false",
+                "script os.chdir(\"scripts\")",
+                "command script import openocd_lldb.py",
+                "set_chipset -s ${config:CHIPSET}",
+                "meta_dir -s ${config:META_PATH}",
+                "debug_adapter -d ${config:ADAPTER} ${config:PROTOCOL}",
+                "gdb_remote_host -s ${config:GDB_REMOTE_HOST}",
+                "protocol-server start MCP listen://localhost:59999"
+            ],
+            "processCreateCommands":
+            [
+                 "debug -d pbl ${config:PBL_BIN_PATH}"
+            ],
+            "exitCommands": [
+                "br del",
+                "protocol-server stop MCP"
+            ]
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "XBL Debug",
+            "breakpointMode": "file",
+            "targetCreateCommands": [
+                "settings set auto-confirm on",
+                "settings set target.skip-prologue true",
+                "settings set target.prefer-dynamic-value no-dynamic-values",
+                "settings set target.enable-synthetic-value false",
+                "script os.chdir(\"scripts\")",
+                "command script import openocd_lldb.py",
+                "meta_dir -s ${config:META_PATH}",
+                "source_path -i boot -p ${config:BOOT_SRC_PATH}",
+                "image_path -i boot -s ${config:BOOT_BUILD_PATH}",
+                "binary_path -i boot -s ${config:BOOT_BIN_PATH}",
+                "debug_adapter -d ${config:ADAPTER} ${config:PROTOCOL}",
+                "gdb_remote_host -s ${config:GDB_REMOTE_HOST}",
+                "protocol-server start MCP listen://localhost:59999"
+            ],
+            "processCreateCommands":
+            [
+                 "debug -d xbl"
+            ],
+            "exitCommands": [
+                "br del",
+                "protocol-server stop MCP"
+            ]
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "TZ Debug",
+            "breakpointMode": "file",
+            "targetCreateCommands": [
+                "settings set auto-confirm on",
+                "settings set target.skip-prologue false",
+                "settings set target.prefer-dynamic-value no-dynamic-values",
+                "settings set target.enable-synthetic-value false",
+                "script os.chdir(\"scripts\")",
+                "command script import openocd_lldb.py",
+                "meta_dir -s ${config:META_PATH}",
+                "source_path -i tz -p ${config:TZ_SRC_PATH}",
+                "image_path -i tz -s ${config:TZ_BUILD_PATH}",
+                "binary_path -i tz -s ${config:TZ_BIN_PATH}",
+                "debug_adapter -d ${config:ADAPTER} ${config:PROTOCOL}",
+                "gdb_remote_host -s ${config:GDB_REMOTE_HOST}",
+                "protocol-server start MCP listen://localhost:59999"
+            ],
+            "processCreateCommands":
+            [
+                "debug -d tz"
+            ],
+            "exitCommands": [
+                "br del",
+                "protocol-server stop MCP"
+            ]
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "HYP Debug",
+            "breakpointMode": "file",
+            "targetCreateCommands": [
+                "settings set auto-confirm on",
+                "settings set target.skip-prologue false",
+                "settings set target.prefer-dynamic-value no-dynamic-values",
+                "settings set target.enable-synthetic-value false",
+                "script os.chdir(\"scripts\")",
+                "command script import openocd_lldb.py",
+                "meta_dir -s ${config:META_PATH}",
+                "source_path -i tz -p ${config:TZ_SRC_PATH}",
+                "image_path -i tz -s ${config:TZ_BUILD_PATH}",
+                "binary_path -i tz -s ${config:HYP_BIN_PATH}",
+                "debug_adapter -d ${config:ADAPTER} ${config:PROTOCOL}",
+                "gdb_remote_host -s ${config:GDB_REMOTE_HOST}",
+                "protocol-server start MCP listen://localhost:59999"
+            ],
+            "processCreateCommands":
+            [
+                "debug -d hyp"
+            ],
+            "exitCommands": [
+                "br del",
+                "protocol-server stop MCP"
+            ]
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "UEFI Debug",
+            "breakpointMode": "file",
+            "targetCreateCommands": [
+                "settings set auto-confirm on",
+                "settings set target.skip-prologue false",
+                "settings set target.prefer-dynamic-value no-dynamic-values",
+                "settings set target.enable-synthetic-value false",
+                "script os.chdir(\"scripts\")",
+                "command script import openocd_lldb.py",
+                "meta_dir -s ${config:META_PATH}",
+                "source_path -i boot -p ${config:BOOT_SRC_PATH}",
+                "image_path -i boot -s ${config:BOOT_BUILD_PATH}",
+                "binary_path -i boot -s ${config:BOOT_BIN_PATH}",
+                "debug_adapter -d ${config:ADAPTER} ${config:PROTOCOL}",
+                "gdb_remote_host -s ${config:GDB_REMOTE_HOST}",
+                "protocol-server start MCP listen://localhost:59999"
+            ],
+            "processCreateCommands":
+            [
+                "debug -d uefi",
+                "debug -d uefi -i ${config:UEFI_DXE_NAME}"
+            ],
+            "exitCommands": [
+                "br del",
+                "protocol-server stop MCP"
+            ]
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Attach",
+            "breakpointMode": "file",
+            "targetCreateCommands": [
+                "settings set auto-confirm on",
+                "settings set target.skip-prologue false",
+                "settings set target.prefer-dynamic-value no-dynamic-values",
+                "settings set target.enable-synthetic-value false",
+                "platform select remote-linux",
+                "script os.chdir(\"scripts\")",
+                "command script import openocd_lldb.py",
+                "set_chipset -s ${config:CHIPSET}",
+                "meta_dir -s ${config:META_PATH}",
+                "settings set target.default-arch ${config:ARCH}",
+                "debug_adapter -d ${config:ADAPTER} ${config:PROTOCOL}",
+                "gdb_remote_host -s ${config:GDB_REMOTE_HOST}",
+                "protocol-server start MCP listen://localhost:59999",
+                "settings set plugin.dynamic-loader.darwin-kernel.scan-type none"
+            ],
+            "processCreateCommands":
+            [
+                "connect_remote -s ${input:subsystemName}"
+            ],
+            "exitCommands": [
+                "br del",
+                "protocol-server stop MCP"
+            ]
+        },
+        // {
+        //     "type": "lldb",
+        //     "request": "attach",
+        //     "name": "Shell",
+        //     "breakpointMode": "file",
+        //     "targetCreateCommands": [
+        //         "settings set auto-confirm on",
+        //         "settings set target.skip-prologue false",
+        //         "settings set target.prefer-dynamic-value no-dynamic-values",
+        //         "settings set target.enable-synthetic-value false",
+        //         "platform select remote-linux",
+        //         "script os.chdir(\"scripts\")",
+        //         "command script import openocd_lldb.py",
+        //         "meta_dir -s ${config:META_PATH}",
+        //         "settings set target.default-arch aarch64",
+        //     ],
+        //     "exitCommands": [
+        //         "br del"
+        //     ]
+        // },
+    ]
+}

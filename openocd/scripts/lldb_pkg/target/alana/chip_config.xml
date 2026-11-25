@@ -1,0 +1,134 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the Alana chipset configuration.
+#=======================================================================  -->
+<pmic_config>
+    <chipset name="alana">
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+        </source_config>
+        <arch>
+            <apss arch="aarch64" gdbPort="3333"></apss>
+        </arch>
+        <adi>
+            <version adi_version="6"></version>
+        </adi>
+        <wdog_config>
+            <!-- WDOG control register address can be read from ipcat (just search for WDOG_CTL_REG)--> 
+            <WDOG_CTL_REG reg="0x20C24004"></WDOG_CTL_REG>
+            <APSS_WDT_TMR1_WDOG_CTL reg="0x17600008"></APSS_WDT_TMR1_WDOG_CTL>
+            <APSS_WDT_TMR2_WDOG_CTL reg="0x17908008"></APSS_WDT_TMR2_WDOG_CTL>
+        </wdog_config>
+        <hyp_config>
+            <QHEE_ENTRY_VECTOR_ADDR address="0x80080000"></QHEE_ENTRY_VECTOR_ADDR>
+            <GUNY_ENTRY_VECTOR_ADDR address="0x80000000"></GUNY_ENTRY_VECTOR_ADDR>
+        </hyp_config>
+        <sleep_config>
+            <pmic_sleep sleep_time="0"></pmic_sleep>
+        </sleep_config>
+        <configure_target>
+            <UefiRamEntryAddr Addr="0xC6800000"></UefiRamEntryAddr> 
+            <RamFvAddr Addr="0xC72D9000"></RamFvAddr>
+            <InfoBlkPtrOffset Addr="0x00601000"></InfoBlkPtrOffset>
+            <SharedImemAddress Addr="0x14680000"></SharedImemAddress>
+            <Arch Arch="64"></Arch>
+            <CoreObj path="boot_images/Build/KaanapaliLAB/Core/DEBUG_CLANG180LINUX/AARCH64"> </CoreObj>
+        </configure_target>
+        <InitOffsets>
+            <ArchString ArchString="64-bit"></ArchString>
+            <PtrSize PtrSize="0x8"></PtrSize>
+            <BinFolder BinFolder="Bin64"></BinFolder>
+            <IBlkUartLogBufferPtr Offset="0x38"></IBlkUartLogBufferPtr>
+            <IBlkUartLogBufferLen Offset="0x40"></IBlkUartLogBufferLen>
+            <EfiHeaderOffset Offset="0x260"></EfiHeaderOffset>
+            <SecLoadAddrOffset Offset="0x2000"></SecLoadAddrOffset>
+            <IBlkRuntimeDbgTablePtr Offset="0x88"></IBlkRuntimeDbgTablePtr>
+            <IBlkRtDbgTableEntryCnt Offset="0x90"></IBlkRtDbgTableEntryCnt>
+            <IBlkSystemTablePtr Offset="0x70"></IBlkSystemTablePtr>
+            <IBlkDxeSymbolAddr Offset="0x98"></IBlkDxeSymbolAddr>
+            <RvaOffsetAdd Offset="0x102C"></RvaOffsetAdd>
+            <ImgBaseDbgEntryOffset Offset="0x138"></ImgBaseDbgEntryOffset>
+            <IBlkConfigTablePtr Offset="0x58"></IBlkConfigTablePtr>
+            <IBlkConfigTableCount Offset="0x60"></IBlkConfigTableCount>
+            <RvaOffsetSub Offset="0xC4"></RvaOffsetSub>
+            <STCfgTbl Offset="0x70"></STCfgTbl>
+            <STCfgItemCnt Offset="0x68"></STCfgItemCnt>
+            <IBlkHobBaseOffset Offset="0x30"></IBlkHobBaseOffset>
+            <MemMapGcdOffset Offset="0x14"></MemMapGcdOffset>
+            <GcdBaseOffset Offset="0x4"></GcdBaseOffset>
+            <GcdEndOffset Offset="0xC"></GcdEndOffset>
+            <GcdAttribOffset Offset="0x1C"></GcdAttribOffset>
+            <RvaOffset Offset="0x1F58"></RvaOffset>
+            <CoreLoadPeImageOffset Offset="249"></CoreLoadPeImageOffset>
+            <IBlkCmdStartOffset Offset="0xA0"></IBlkCmdStartOffset>
+            <IBlkTotalCmdSize Offset="0xA4"></IBlkTotalCmdSize>
+            <IBlkSymbolCmdString Offset="0xA8"></IBlkSymbolCmdString>
+            <IBlkLoaderBkpt Offset="0xB0"></IBlkLoaderBkpt>
+            <IBlkDbgStopDrvrStr Offset="0xB8"></IBlkDbgStopDrvrStr>
+            <IBlkModuleName Offset="0xD8"></IBlkModuleName>
+            <IBlkSymbolCmdSize Offset="0xF8"></IBlkSymbolCmdSize>
+            <IBlkLastCmdSize Offset="0xFC"></IBlkLastCmdSize>
+            <IBlkDirStr Offset="0x100"></IBlkDirStr>
+            <IBlkBdsHotkey Offset="0x120"></IBlkBdsHotkey>
+            <IBlkForceDisableHWWdog Offset="0x140"></IBlkForceDisableHWWdog>
+        </InitOffsets>
+        <adsp_config>
+            <ukernel_path ukernel_file='UKERNEL_kaanapali.adsp.prodQ.elf'></ukernel_path>
+            <hw_threads thrd_num="6"></hw_threads>
+            <tlb_entries tlb_num="256"></tlb_entries> 
+            <wdog_ctl wdog="0x6884004"></wdog_ctl>     
+            <etm_clk_reg etm_clk="0x81348000"></etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk="0x81348008"></etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->
+            <core_clk_reg core_clk="0x147000"></core_clk_reg>
+            <core_clk_reg core_clk="0x14700C"></core_clk_reg>
+            <core_clk_reg core_clk="0x6E1101C"></core_clk_reg>
+            <!-- checking -->
+            <core_clk_reg core_clk="0x6E1001C"></core_clk_reg>
+            <!-- checking -->
+            <core_clk_reg core_clk="0x6E12020"></core_clk_reg>
+            <core_clk_reg core_clk="0x6E12014"></core_clk_reg>
+            <core_clk_reg core_clk="0x6800018"></core_clk_reg>
+            <core_clk_reg core_clk="0x6E12058"></core_clk_reg>
+            <root_path root_path='ROOT_kaanapali.adsp.prodQ.elf'></root_path>           
+        </adsp_config>
+		<cdsp_config>
+            <ukernel_path ukernel_file='UKERNEL_kaanapali.cdsp.prodQ.elf'></ukernel_path>
+            <hw_threads thrd_num="12"></hw_threads>
+            <tlb_entries tlb_num="128"></tlb_entries> 
+            <wdog_ctl wdog="0x11008000"></wdog_ctl>     
+            <!-- <etm_clk_reg etm_clk="0x11008008"> </etm_clk_reg> -->
+            <!-- 0x11190000 -->
+            <etm_clk_reg etm_clk="0x81190000"></etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk="0x81190008"></etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->
+            <root_path root_path='ROOT_kaanapali.cdsp.prodQ.elf'></root_path>
+        </cdsp_config>
+        <mpss_config>
+            <ukernel_path ukernel_file='orig_MODEM_PROC_IMG_kaanapali.gen.testQ.elf'></ukernel_path>
+            <hw_threads thrd_num="8"></hw_threads>
+            <tlb_entries tlb_num="256"></tlb_entries>
+            <wdog_ctl wdog="0x4484004"></wdog_ctl>
+            <etm_clk_reg etm_clk="0x81010000"></etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk="0x81010000"></etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->
+            <root_path root_path='OEMPD_IMG_kaanapali.gen.testQ.elf'></root_path>           
+        </mpss_config>
+        <wake_cpu0>
+            <write reg="0x11311FB0" value="0xc5acce55"></write>
+            <write reg="0x11311060" value="0x0"></write>
+            <write reg="0x113110DC" value="0x0"></write>
+            <write reg="0x11311FB0" value="0xa5a5a5a5"></write>
+        </wake_cpu0>
+    </chipset>
+</pmic_config>

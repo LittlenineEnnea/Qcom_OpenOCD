@@ -1,0 +1,141 @@
+<!-- #=======================================================================
+#
+# Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+# @file chip_config.xml
+#
+# @section Description
+# XML file containing the information about the Kodiak chipset configuration.
+#=======================================================================  -->
+<pmic_config>    
+    <chipset name="PAKALA" >
+        <examine_flag>
+            <examine value = ""> </examine>
+        </examine_flag>
+        <source_config>
+            <boot func = "sbl1_main_ctl" end = "boot_images/"> </boot>
+            <tz  func = "tzbsp_boot" end= "trustzone_images/"> </tz>
+        </source_config>
+        <arch>
+            <apss arch = "aarch64"  gdbPort = "3333"> </apss>
+            <cdsp arch = "hexagon"  gdbPort = "3002"> </cdsp>
+            <mpss arch = "hexagon"  gdbPort = "3003"> </mpss>
+        </arch>
+        <adi>
+            <version adi_version= "5"> </version>
+        </adi>
+        <wdog_config>
+            <!-- WDOG control register address can be read from ipcat (just search for WDOG_CTL_REG)-->
+            <WDOG_CTL_REG reg="0xC234004"> </WDOG_CTL_REG>
+            <APSS_WDT_TMR1_WDOG_CTL reg = "0x17410008" > </APSS_WDT_TMR1_WDOG_CTL>
+            <APSS_WDT_TMR2_WDOG_CTL reg = "0x17411008" > </APSS_WDT_TMR2_WDOG_CTL>
+        </wdog_config>
+        <hyp_config>
+            <QHEE_ENTRY_VECTOR_ADDR address="0x80080000"> </QHEE_ENTRY_VECTOR_ADDR>
+            <GUNY_ENTRY_VECTOR_ADDR address="0x80000000"> </GUNY_ENTRY_VECTOR_ADDR>
+        </hyp_config>
+        <sleep_config>
+            <pmic_sleep sleep_time = "0" > </pmic_sleep>
+        </sleep_config>
+        <spmi_config>
+            <spmi_write reg="0x0C2A22FC" value ="0x1"> </spmi_write>
+            <spmi_write reg="0x0C2A2300" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A010" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A000" value ="0x1"> </spmi_write>
+
+            <spmi_write reg="0xC40AF08" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC40A014" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A014" value ="0x2"> </spmi_write>
+            <spmi_write reg="0xC40AF00" value ="0x0"> </spmi_write>
+
+            <spmi_write reg="0xC40AF04" value ="0x600BA8"> </spmi_write>
+            <spmi_write reg="0xC40AF14" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A048" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC40A018" value ="0xFF"> </spmi_write>
+
+            <spmi_write reg="0xC40AF10" value ="0x7F"> </spmi_write>
+            <spmi_write reg="0xC40AF04" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40AF00" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC40AF04" value ="0x600BA8"> </spmi_write>
+
+            <spmi_write reg="0xC40AF14" value ="0x1"> </spmi_write>
+            <spmi_write reg="0xC40A048" value ="0x0"> </spmi_write>
+            <spmi_write reg="0xC40A018" value ="0xFF"> </spmi_write>
+            <spmi_write reg="0xC40AF10" value ="0x7F"> </spmi_write>
+
+            <spmi_write reg="0xC40AF04" value ="0x1"> </spmi_write>
+        </spmi_config>
+        <reset_config>
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x00000000"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000570"> </reset_write>
+
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x00000007"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000560"> </reset_write>
+
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x00000020"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000150"> </reset_write>
+
+            <reset_write reg="0xC4410FC" value ="0x00000800"> </reset_write>
+            <reset_write reg="0xC40AEFC" value ="0x00000003"> </reset_write>
+            <reset_write reg="0xE5F0010" value ="0x000000A5"> </reset_write>
+            <reset_write reg="0xE5F0000" value ="0x00000570"> </reset_write>
+
+        </reset_config>
+        <adsp_config>
+            <ukernel_path ukernel_file='UKERNEL_pakala.adsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "4"> </hw_threads>
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <wdog_ctl wdog= "0x6884004"></wdog_ctl>     
+            <etm_clk_reg etm_clk= "0x80B48000"> </etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x80B48008"> </etm_clk_reg> 
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->             
+            <core_clk_reg core_clk = "0x147000"> </core_clk_reg>
+            <!-- GCC_LPASS_CFG_NOC_SWAY_CBCR -->
+            <core_clk_reg core_clk= "0x147010"> </core_clk_reg>
+            <!-- GCC_LPASS_AT_CBCR  -->
+            <core_clk_reg core_clk= "0x6E1101C"> </core_clk_reg>
+            <!-- LPASS_AON_CC_Q6_AHBM_CBCR  -->
+            <core_clk_reg core_clk= "0x6E1001C"> </core_clk_reg>
+            <!-- LPASS_AON_CC_Q6_XO_CBCR  -->
+            <core_clk_reg core_clk= "0x6E12020"> </core_clk_reg>
+            <!-- LPASS_AON_CC_AT_CBCR  -->
+            <core_clk_reg core_clk= "0x6E12014"> </core_clk_reg>
+            <!-- LPASS_AON_CC_PCLKDBG_CBCR  -->
+            <core_clk_reg core_clk= "0x6800018"> </core_clk_reg>
+            <!-- LPASS_QDSP6SS_DBG_CFG  -->
+            <core_clk_reg core_clk= "0x6E12058"> </core_clk_reg>
+            <!-- LPASS_AON_CC_DBG_TSCTR_CBCR  -->
+            <root_path root_path='ROOT_pakala.adsp.prodQ.elf'> </root_path>           
+        </adsp_config>
+		<cdsp_config>
+            <ukernel_path ukernel_file='UKERNEL_pakala.cdsp.prodQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "8"> </hw_threads>
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <wdog_ctl wdog= "0x32384004"></wdog_ctl>     
+            <etm_clk_reg etm_clk= "0x80988000"> </etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x80988008"> </etm_clk_reg> 
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->             
+            <root_path root_path='ROOT_pakala.cdsp.prodQ.elf'> </root_path>           
+        </cdsp_config>
+        <mpss_config>
+            <ukernel_path ukernel_file='orig_MODEM_PROC_IMG_pakala.oempd.testQ.elf'> </ukernel_path>
+            <hw_threads thrd_num= "8"> </hw_threads>
+            <tlb_entries tlb_num= "256"> </tlb_entries> 
+            <wdog_ctl wdog= "0x4104004"></wdog_ctl>     
+            <etm_clk_reg etm_clk= "0x80808000"> </etm_clk_reg>
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_CLK_EN  -->
+            <etm_clk_reg etm_clk= "0x80808008"> </etm_clk_reg> 
+            <!-- QDSS_MSS_QDSP6_QDSP6_ETM_RESET  -->             
+            <root_path root_path='OEMPD_IMG_pakala.oempd.testQ.elf'> </root_path>           
+        </mpss_config>
+    </chipset>
+</pmic_config>

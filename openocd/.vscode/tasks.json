@@ -1,0 +1,90 @@
+//
+// Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @file tasks.json
+//
+// @section Description
+// This file configure and automate tasks such as building, running scripts, and other processes.
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start OpenOCD",
+            "type": "shell",
+            "command": "python",
+            "osx": {
+                "command": "python3"
+            },
+            "args": [
+                "get_codelldb_lldb_path.py",
+                "--arg1",
+                "openocd -c ${config:CHIPSET} -d ${config:ADAPTER} ${config:PROTOCOL}"
+            ],
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/scripts"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "close": true
+            }
+        },
+        {
+            "label": "Set Active Chipset",
+            "type": "shell",
+            "command": "python",
+            "osx": {
+                "command": "python3"
+            },
+            "args": [
+                "scripts/utils/sync_chipset_debug_config.py",
+                "--chipset",
+                "${input:chipsetInput}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "chipsetInput",
+            "type": "pickString",
+            "description": "Select chipset",
+            "options": [
+                "alana",
+                "aldabra",
+                "amboseli",
+                "aspen",
+                "balsam",
+                "bonito",
+                "bonsai",
+                "clarence",
+                "eliza",
+                "glymur",
+                "hamoa",
+                "hawi",
+                "kaanapali",
+                "kalpeni",
+                "kobuk",
+                "kodiak",
+                "lanai",
+                "maili",
+                "matrix",
+                "mavros",
+                "milos",
+                "molokai",
+                "netrani",
+                "pakala",
+                "palawan",
+                "poros",
+                "qcm6490",
+                "qcs9100",
+                "skyros"
+            ]
+        }
+    ]
+}

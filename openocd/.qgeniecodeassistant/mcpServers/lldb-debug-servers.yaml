@@ -1,0 +1,81 @@
+name: LLDB Debug MCP Servers
+version: 0.1.0
+schema: v1
+mcpServers:
+  - name: lldb-apps
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "59999"
+    env: {}
+  - name: lldb-aoss
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60000"
+    env: {}
+  - name: lldb-adsp-step2
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60001"
+    env: {}
+  - name: lldb-cdsp-step2
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60002"
+    env: {}
+  - name: lldb-soccp
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60003"
+    env: {}
+  - name: lldb-tme-step2
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60004"
+    env: {}
+  - name: lldb-awm
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60005"
+    env: {}
+  - name: lldb-swm
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60006"
+    env: {}
+  - name: lldb-oempd
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60007"
+    env: {}
+  - name: lldb-attach
+    command: python
+    args:
+      - mcpConnecters/lldb-mcp.py
+      - --port
+      - "60008"
+    env: {}
+  - name: ipcat
+    url: "https://ipcatalog-mcp.qualcomm.com/mcp/"
+    type: streamable-http
+    requestOptions:
+      headers:
+        IPCAT_TOKEN: "YOUR IPCAT_TOKEN"
+

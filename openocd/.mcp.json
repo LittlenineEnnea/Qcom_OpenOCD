@@ -1,0 +1,92 @@
+{
+    "mcpServers": {
+      "lldb-apps": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py"
+        ]
+      },
+      "lldb-aoss": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60000"
+        ]
+      },
+      "lldb-adsp-step2": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60001"
+        ]
+      },
+      "lldb-cdsp-step2": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60002"
+        ]
+      },
+      "lldb-soccp": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60003"
+        ]
+      },
+      "lldb-tme-step2": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60004"
+        ]
+      },
+      "lldb-awm": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60005"
+        ]
+      },
+      "lldb-swm": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60006"
+        ]
+      },
+      "lldb-oempd": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60007"
+        ]
+      },
+      "lldb-attach": {
+        "command": "python",
+        "args": [
+          "mcpConnecters/lldb-mcp.py",
+          "--port",
+          "60008"
+        ]
+      },
+
+       "ipcat": {
+        "timeout": 60,
+        "type": "http",
+        "url": "https://ipcatalog-mcp.qualcomm.com/mcp/",
+        "headers": {
+          "IPCAT_TOKEN": "YOUR IPCAT_TOKEN"
+        }
+      }
+    }
+  }
+  

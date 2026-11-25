@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+# local build tree used by build_macos.sh
+/.build/
+
+# Qualcomm user guide, not for redistribution
+/openocd/doc/
+
+# runtime output of the LLDB scripts
+/openocd/scripts/temp/

@@ -1,0 +1,61 @@
+// Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @file settings.json
+//
+// @section Description
+// This file defines variables for configuring the chipset, adapter, and paths needed for debugging.
+
+{
+    // CHIPNAME CONFIGURATION
+    "CHIPSET": "",                    // [Mandatory] set ChipSet name 
+
+    // DEBUG ADAPTER CONFIGURATION
+    "ADAPTER": "eud",                      // [Mandatory] set the debug adapter like EUD or Olimex or Jlink
+    "PROTOCOL": "swd",                     // [optional] set the protocol SWD or JTAG
+
+    // OPENOCD DEBUG CONFIGURATION
+    "META_PATH": "",                       // [Mandatory] Path to meta build with forward slash '/', as shown in documentation
+
+    // REMOTE OPENOCD CONFIGURATION
+    "GDB_REMOTE_HOST": "localhost",        // [Optional] Hostname or IP of the machine running OpenOCD; defaults to "localhost"
+    
+    // PBL DEBUG CONFIGURATION
+    "PBL_BIN_PATH": "",
+
+    // BOOT DEBUG CONFIGURATION
+    "BOOT_BUILD_PATH": "",                 // [Optional] Path to engineering build
+    "BOOT_SRC_PATH": "",                   // [Optional] Path to the source code
+    "BOOT_BIN_PATH": "",                   // [Optional] Path to the binary/symbol file
+
+    // TZ DEBUG CONFIGURATION
+    "TZ_BUILD_PATH": "",                   // [Optional] Path to engineering build
+    "TZ_SRC_PATH": "",                     // [Optional] Path to the source code
+    "TZ_BIN_PATH": "",                     // [Optional] Path to the binary/symbol file
+
+    // HYP DEBUG CONFIGURATION
+    "HYP_BIN_PATH": "",                    // [Optional] Path to the binary/symbol file
+
+    // UEFI DEBUG CONFIGURATION
+    "UEFI_DXE_NAME": "",                   // [Mandatory] Set name of dxe to debugged
+
+    // AOSS DEBUG CONFIGURATION
+    "AOSS_BUILD_PATH": "",                 // [Optional] Path to engineering build
+    "AOSS_SRC_PATH": "",                   // [Optional] Path to the source code
+    "AOSS_BIN_PATH": "",                   // [Optional] Path to the binary/symbol file
+
+    // ATTACH DEBUG CONFIGURATION
+    "ARCH": "",                            // [Mandatory] CPU Architecture
+
+    // OEMPD DEBUG CONFIGURATION
+    "OEMPD_BUILD_PATH": "",                // [Mandatory] Path to the engineering oempd binary 
+    "OEMPD_SRC_PATH": "",                  // [Optional] Path to the source code
+    "OEMPD_PORT": "",                      // [Mandatory] MPSS debug port number as seen in Openocd
+
+    // CHIPSET LAUNCH BASE (for sync_chipset_debug_config.py)
+    "chipsetLaunchBase": "scripts/lldb_pkg/target",
+    "lldb.displayFormat": "auto",
+    "lldb.showDisassembly": "auto",
+    "lldb.dereferencePointers": true,
+    "lldb.consoleMode": "commands"
+}
