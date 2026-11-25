@@ -31,7 +31,7 @@ TARGET_NAME="$(echo "$CHIPSET" | tr '[:lower:]' '[:upper:]').apss.core0"
 LOG="${TMPDIR:-/tmp}/openocd-apss-$GDB_PORT.log"
 
 for f in "$OPENOCD" "$GDB" "$IFACE_CFG" "$TARGET_CFG"; do
-    [[ -e "$f" ]] || { echo "error: missing $f" >&2; exit 1; }
+    [[ -e "$f" ]] || { echo "error: missing $f (run ./build_macos.sh first)" >&2; exit 1; }
 done
 
 if nc -z 127.0.0.1 "$GDB_PORT" 2>/dev/null; then

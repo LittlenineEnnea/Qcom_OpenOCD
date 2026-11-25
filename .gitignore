@@ -22,3 +22,14 @@ __pycache__/
 
 # packages made by the release workflow
 /dist/
+
+# build outputs of build_macos.sh / the workflow; the repo ships sources only
+/openocd/bin/*
+/openocd/lib/
+/openocd/share/
+/gdb/bin/gdb
+/gdb/lib/
+/gdb/share/
+*.exe
+*.dll
+*.dylib

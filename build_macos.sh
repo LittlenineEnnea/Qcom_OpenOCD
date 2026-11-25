@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Rebuild the macOS (Apple Silicon) binaries shipped in this repo:
+# Build the macOS (Apple Silicon) binaries. The repo only holds sources;
+# these outputs are git-ignored (the GitHub workflow packages them):
 #
 #   openocd/bin/openocd + openocd/share/openocd   from src/
 #   gdb/bin/gdb + gdb/share/gdb                   from gdb/src/ (GDB 18.1)

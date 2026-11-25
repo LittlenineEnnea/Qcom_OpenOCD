@@ -17,7 +17,9 @@ if [[ -n "${EUD_INSTALL_PATH:-}" ]]; then
 fi
 
 if [[ ! -x "$OPENOCD_DIR/openocd" ]]; then
-    echo "error: $OPENOCD_DIR/openocd not found (macOS OpenOCD build missing)" >&2
+    echo "error: $OPENOCD_DIR/openocd not found." >&2
+    echo "       Run ./build_macos.sh first, or use the package built by the" >&2
+    echo "       'Build macOS package' GitHub workflow." >&2
     exit 1
 fi
 

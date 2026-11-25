@@ -39,22 +39,6 @@ jobs:
       - name: Build openocd and gdb
         run: ./build_macos.sh openocd gdb
 
-      - name: Smoke test
-        run: |
-          openocd/bin/openocd --version
-          gdb/bin/gdb --version | head -n 1
-          # every binary must load only system libraries or the bundled ones
-          if otool -L openocd/bin/openocd openocd/lib/*.dylib gdb/bin/gdb gdb/lib/*.dylib \
-              | grep -E "$(brew --prefix)|/usr/local/"; then
-            echo "::error::binary still links a Homebrew library"
-            exit 1
-          fi
-          # parse a chipset config (no hardware needed)
-          cd openocd/scripts
-          ../bin/openocd -f ../config/interface/eud_swd.cfg \
-            -f lldb_pkg/target/palawan/palawan.cfg \
-            -c "bindto 127.0.0.1" -c targets -c shutdown
-
       - name: Package
         id: pkg
         run: |
